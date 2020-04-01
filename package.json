@@ -1,0 +1,39 @@
+{
+  "name": "requestal",
+  "version": "0.0.1",
+  "description": "A node library for handling http requests",
+  "main": "index.js",
+  "scripts": {
+    "test": "node ./test/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smguggen/requestal.git"
+  },
+  "keywords": [
+    "javascript",
+    "post",
+    "get",
+    "request",
+    "node",
+    "rest",
+    "api",
+    "http",
+    "https",
+    "json",
+    "lightweight"
+  ],
+  "author": "Steven Guggenheimer <sguggen@srcer.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/smguggen/requestal/issues"
+  },
+  "homepage": "https://github.com/smguggen/requestal#readme",
+  "dependencies": {
+    "@srcer/questal-proto": "^1.1.1",
+    "ternal": "^1.0.3"
+  },
+  "devDependencies": {
+    "express": "^4.17.1"
+  }
+}

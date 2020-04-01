@@ -1,0 +1,10 @@
+.github
+.vscode
+node_modules
+bower_components
+*-lock.*
+.history
+.DS_Store
+example/
+_*.*
+test/data/data2.json

@@ -1,0 +1,10 @@
+.vscode
+node_modules
+_*.*
+bower_components
+*-lock.*
+.history
+.DS_Store
+dist
+test/dist
+test/data/data2.json
