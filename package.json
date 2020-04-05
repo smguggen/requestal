@@ -1,7 +1,7 @@
 {
   "name": "requestal",
-  "version": "0.0.1",
-  "description": "A node library for handling http requests",
+  "version": "0.0.1-alpha.2",
+  "description": "A Node module for handling server-side HTTP requests with Javascript",
   "main": "index.js",
   "scripts": {
     "test": "node ./test/test.js"
@@ -15,6 +15,9 @@
     "post",
     "get",
     "request",
+    "put",
+    "patch",
+    "delete",
     "node",
     "rest",
     "api",
@@ -30,7 +33,7 @@
   },
   "homepage": "https://github.com/smguggen/requestal#readme",
   "dependencies": {
-    "@srcer/questal-proto": "^1.1.1",
+    "@srcer/questal-proto": "^3.3.1",
     "ternal": "^1.0.3"
   },
   "devDependencies": {

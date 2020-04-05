@@ -1,6 +1,6 @@
 const RequestalHeaders = require('../lib/headers');
 const RequestalResponse = require('../lib/response');
-const { ProtoRequest } = require('@srcer/questal-proto')
+const { ProtoRequest, ProtoData } = require('@srcer/questal-proto')
 const Url = require('url');
 const http = require('http');
 const https = require('https');
@@ -8,11 +8,6 @@ const { echo } = require('ternal');
 
 class RequestalRequest extends ProtoRequest {
     constructor(options) {
-        if (typeof options === 'string') {
-            options = {
-                url: options
-            }
-        }
         super(null, options);
         this.chunks = '';
         this.active = false;
@@ -28,24 +23,54 @@ class RequestalRequest extends ProtoRequest {
       return this._state || 'unsent';   
     }
     
-    set url(u) {
-        let url;
-        if (typeof u === 'string') {
-            url = new URL(u || '/');
-        } else if (Array.isArray(u)) {
-            url = new URL(...u);
-        } else if (u && typeof u === 'object') {
-            url = new URL(u.path, u.base);
-        } else {
+    set base(b) {
+        this._base = b;    
+    }
+    
+    get base() {
+        return this._base || this.options.base || null;
+    }
+    
+    set url(u) { 
+        if (!u) {
             return;
         }
-        this.data.params = url.search;
-        this._url = url;
+        if (u == '/' && !this.base) {
+           this.events.fire('error', '"/" is not a valid Url.'); 
+        }
+        let url;
+        if (typeof u === 'string') {
+            if (this.base && this.urlObject) {
+                u = u.replace(this.urlObject.origin, '');
+            }
+            url = [u, this.base || null];
+        } else if (Array.isArray(u)) {
+            url = [u[0], u[1] || this.base || null];
+            if (u[1]) {
+                this.base = u[1];
+            }
+        } else if (u && typeof u === 'object' && u.path) {
+            url = [u.path, u.base || this.base || null];
+            if (u.base) {
+                this.base = u.base;
+            }
+        }
+        let obj;
+        let $this = this;
+        url = url.filter(a => a ? true : false);
+
+        try {
+            obj = new URL(...url);
+            this.data.params = obj.search;
+            this._url = obj;
+        } catch(e) {
+            $this.events.fire('error', 'URL Error: ', e);
+        }
     }
 
     get url() {
         if (!this._url) {
-            return '/';
+            return null;
         } else {
             return this._url.href;
         }
@@ -72,15 +97,20 @@ class RequestalRequest extends ProtoRequest {
     setSettings() {
         let $this = this;
         let fields = {
+            agent: ['agent', 'userAgent', 'user-agent'],
+            createConnection: ['createConnection', 'connection', 'connect'],
+            family: ['family', 'ip', 'ipAddress'],
+            insecureHTTPParser: ['insecureHTTPParser', 'insecure', 'insecureParser'],
+            localAddress: ['localAddress', 'local'],
+            lookup: ['lookup'],
+            maxHeaderSize: ['maxHeaderSize', 'maxHeader', 'max-header'],
+            socketPath: ['socketPath', 'socket'],
             auth: ['auth', 'authorization'],
             defaultPort: ['port', 'defaultPort'],
-            hostname: ['hostname', 'host'],
-            method: ['method'],
             timeout: ['timeout']
         }
-        let mutations = {
-            method: m => m.toUpperCase(),
-            protocol: () => $this.url.protocol,
+        let settings = {
+            method: $this.method.toUpperCase(),
         }
         let keys = Object.keys(this.options);
         Object.keys(fields).forEach((fieldKey, index) => {
@@ -88,24 +118,50 @@ class RequestalRequest extends ProtoRequest {
             for (let i = 0; i < field.length;i++) {
                 if (keys.includes(field[i])) {
                     let option = this.options[field[i]];
-                    if (mutations[fieldKey]) {
-                        option = mutations[fieldKey](option);
+                    if (option) {
+                        this.settings[fieldKey] = option;
                     }
-                    this.settings[fieldKey] = this.options[field[i]];
                     break;
                 }
             }
         }, this);
+        this.settings = ({}, this.settings, settings);
         return this;
     }
     
-    open(url, data) {
+    checkUrl(url) {
+        url = url || this.url;
+        if (!this.method) {
+            this.events.fire('error', 'Request method is empty');
+        } else if (!url) {
+            this.events.fire('error', `Request Url "${url}" is invalid`);
+        }
+        this.events.fire('init');
+        
+        return url;
+    }
+    
+    presend(url, data) {
+        if (url && typeof url === 'object') {
+            data = url;
+            url = null;
+        } 
+        this.url = this.checkUrl(url);
+        return {
+            url:  this.url,
+            data: data
+        };
+    }
+    
+    open(url) {
+        if (!url) {
+            url = this.checkUrl(url);
+        }
         let $this = this;
-        this._presend(url, data);
-  
         this.events.fire('ready');
         this.settings.headers = this.headers.get();
         this.request = this.protocol.request(this.url, this.settings, response => {
+            $this.response.settings = response;
             $this.active = true;
             $this.events.fire('responseHeaders', response.headers);
             response.setEncoding($this.headers.encoding || 'utf8');
@@ -118,11 +174,10 @@ class RequestalRequest extends ProtoRequest {
             });
             
             response.on('end', () => {
-                $this.response = new RequestalResponse(response, $this.chunks, $this.omitBody);
                if ($this.chunks) {
-                   $this.events.fire('success', $this.response);
+                   $this.events.fire('success', $this.response, response);
                } 
-               $this.events.fire('complete', $this.response);
+               $this.events.fire('complete', $this.response, response);
             });
         });
         if (this.settings.timeout) {
@@ -143,28 +198,47 @@ class RequestalRequest extends ProtoRequest {
     }
     
     send(body) {
-        if (body) {
-            this.data.params = body;
-        } else {
-            this.data.params = this.url.search;
-        }
-        let params = this.data.params;
+        let params = super.send(body);        
         if (params) {
-            this.request.write(this.data.params);
+            if (typeof params !== 'string' && !Buffer.isBuffer(params)) {
+                try {
+                    params = JSON.stringify(params);   
+                } catch (e) {
+                    params = ProtoData.stringify(params);
+                }
+            }
+            this.request.write(params);
         }
         this.request.end();
         return this;
     }
     
-    
     init(options) {
-        this.options = options || {};
         this.eventNames = ['init', 'ready', 'responseHeaders', 'data', 'change', 'complete', 'success', 'progress', 'abort', 'error', 'timeout'];
-        this.url = this.options.url;
+        this.setOptions(options);
+        if (this.options.url) {
+            this.url = this.options.url;
+        }
         this.headers = new RequestalHeaders(this.options.headers);
+        this.response = new RequestalResponse({}, this.chunks, this.omitBody);
         this.data.params = this.options.data || this.options.params;
         this.setSettings();
         this._defaultEvents();
+    }
+    
+    setOptions(options) {
+        options = options || {};
+        this.options = {};
+        let keys = Object.keys(options);
+        for (let i = 0; i < keys.length; i++) {
+            let key = keys[i];
+            let option = options[key];
+            if (this.eventNames && this.eventNames.includes(key) && typeof option === 'function') {
+                this.on(key, option);
+            } else {
+                this.options[key] = option;
+            }
+        }
     }
     
     log(message) {
@@ -189,8 +263,19 @@ class RequestalRequest extends ProtoRequest {
         return this;
     }
     
+    set chunks(c) {
+        this.response.responseData = c;
+        if (!this._chunks) {
+            this._chunks = '';
+        }
+        this._chunks += c;
+    }
+    
+    get chunks() {
+        return this._chunks || '';
+    }
+    
     _defaultEvents() {
-        let $this = this;
         this.on('error', (...errs) => {
            echo('red', ...errs);
            process.exit(0);
@@ -202,23 +287,19 @@ class RequestalRequest extends ProtoRequest {
         this.on('responseHeaders', () => {
             this.state = 'responseHeaders'; 
             this.events.fire('change', 'responseHeaders');
-
         });
         this.on('data', () => {
             this.state = 'data'; 
             this.events.fire('change', 'data');
-
         });
         this.on('complete', () => {
             this.state = 'complete'; 
             this.events.fire('change', 'complete');
         });
         this.events.onCalc('data', data => {
-           let newData = $this.chunks + data;
-           return newData;
+           return data;
         });
     }
-   
 }
 
 module.exports = RequestalRequest;

@@ -1,18 +1,25 @@
 const RequestalRequest = require('./request');
 const RequestalGet = require('./get');
-//const QuestalPost = require('./post');
+const RequestalPost = require('./post');
 //const QuestalDelete = require('./delete');
 
 class Requestal {
     
-    get(options) {
+    static Request(options) {
+        return new RequestalRequest(options);
+    }
+    
+    get(...options) {
+        options = this._parseOptions(...options);
         return new RequestalGet(options);
     }
-
-    static Request() {
-        return new RequestalRequest();
+    
+    post(...options) {
+        options = this._parseOptions(...options);
+        return new RequestalPost(options);
     }
-
+    
+    
     static Get(url, data, onSuccess, onError) {
         if (typeof data === 'function') {
             onSuccess = data;
@@ -24,6 +31,19 @@ class Requestal {
             error:onError
         });
 
+        return req.send(url, data);
+    }
+    
+    static Post(url, data, onSuccess, onError) {
+        if (typeof data === 'function') {
+            onSuccess = data;
+            onError = onSuccess;
+            data = {};
+        }
+        let req = new RequestalPost({
+            success:onSuccess,
+            error:onError
+        });
         return req.send(url, data);
     }
 
@@ -50,6 +70,25 @@ class Requestal {
             });
         }
         return null;
+    }
+    
+    _parseOptions(...options) {
+        let [option1, option2, option3] = options;
+        let result = {};
+        if (option1 && typeof option1 == 'object') {
+            result = option1;
+        } else {
+            if (typeof option1 === 'string') {
+                result.url = option1;
+            } 
+            if (option2 && typeof option2 == 'object') {
+                result.data = option2;
+            }
+            if (option3 && typeof option3 == 'object') {
+                result = Object.assign({}, option3, result);
+            }
+        }
+        return result;
     }
 }
 
