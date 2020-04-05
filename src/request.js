@@ -280,19 +280,19 @@ class RequestalRequest extends ProtoRequest {
            echo('red', ...errs);
            process.exit(0);
         });
-        this.on('ready', () => {
+        this.events.first('ready', () => {
            this.state = 'ready'; 
            this.events.fire('change', 'ready');
         });
-        this.on('responseHeaders', () => {
+        this.events.first('responseHeaders', () => {
             this.state = 'responseHeaders'; 
             this.events.fire('change', 'responseHeaders');
         });
-        this.on('data', () => {
+        this.events.first('data', () => {
             this.state = 'data'; 
             this.events.fire('change', 'data');
         });
-        this.on('complete', () => {
+        this.events.first('complete', () => {
             this.state = 'complete'; 
             this.events.fire('change', 'complete');
         });

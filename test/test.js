@@ -80,14 +80,13 @@ let post = q.post('/test/data',
     }
 );
 
-post.headers.accept = 'json'; //adds 'application/json' to acceptheaders to be set
+post.headers.accept = 'json'; //adds 'application/json' to accept headers to be set
 
 post.response.type = 'json'; //sets response type to application/json
 
-post.on('responseHeaders', (headers) => { // when readystate == 2
-    if (post.response.headers.contentType == 'application/json') {
-        console.log(headers); //print questal response header object to console
-    }
+post.on('responseHeaders', (headers) => {
+    assert.equal(headers['content-type'], 'application/json; charset=utf-8');
+    assert.equal(post.state, 'responseHeaders');
 });
 
 post.send({id:17, last:'Nelson'});
