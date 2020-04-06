@@ -110,9 +110,6 @@ function deleteTestFile() {
     }, 5000);
 }
 
-test();
-deleteTestFile();
-
 module.exports = {
     test:test,
     delete:deleteTestFile

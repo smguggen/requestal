@@ -4,7 +4,7 @@
   "description": "A Node module for handling server-side HTTP requests with Javascript",
   "main": "index.js",
   "scripts": {
-    "test": "node ./test/test.js"
+    "test": "node ./bin/requestal.js test"
   },
   "bin": {
     "requestal": "./bin/requestal.js"
