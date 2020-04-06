@@ -1,3 +1,113 @@
-# Requestal - alpha
+# Rerequestal - alpha
 
-A Node module for handling server-side HTTP requests with Javascript
+A Node module for handling server-side HTTP requests with Javascript, using Node's built-in http and https modules.
+
+Install
+-------
+```console
+npm install requestal
+```
+
+Basic Usage:
+-------------
+
+You can make `get`, `post`, `put`, `patch`, and `delete` requests with `Requestal`. to make a quick one off request you can capitalize the first letter and call the static version of the method, or you can set more customized options by instantiating a new `Requestal` instance:
+:
+```javascript
+const Requestal = require('requestal');
+
+//static request
+Requestal.Get('/path/to/dest', data => {
+    console.log(data)
+});
+
+//using full Get method instance
+const q = new Requestal();  
+let getInstance = q.get(options);
+// do stuff
+getInstance.send(url, data);
+```
+Pass parameters into the Requestal constructor to have them persist through every call made by that instance, then optionally override a parameter on any individual call:
+```javascript
+let post = q.post(
+    {
+        url:'/data',
+        data: {
+            id:16,
+            first: 'Bill',
+            last: 'Jones',
+        }
+    }
+);
+
+//Parameters sent: { url:'/data', data: { id:16, first:'Bill', last: 'Jones' } }
+post.send();  
+
+//Parameters sent: { url:'/params', data: { id:17, first:'Bill', last: 'Nelson' } }
+post.send('/params', { id:17, last:'Nelson' });  
+```
+
+Callbacks
+---------
+```javascript
+//static post request
+Requestal.Post('/path/to/dest', function(data) { console.log(data, data.json)});
+```
+The data parameter passed to the 'on success' callback is a Requestal Response object containing the results of the request, including some handy methods for accessing the data.
+
+#### data.json:
+```json
+"names": [
+    {
+        "id": 1,
+        "first": "Bill",
+        "last": "Jones"
+    },
+    {
+        "id":2,
+        "first":"Jane",
+        "last":"Smith"
+    },
+    {
+        "id":3,
+        "first":"Bob",
+        "last":"Davis"
+    }
+]
+```
+
+Headers
+-------
+
+```javascript
+let post = q.post('/data')
+
+post.headers.accept = 'json'; //adds 'application/json' to acceptheaders to be set
+
+post.response.type = 'json'; //sets response type to application/json
+```
+You can check the response object's headers parameter to confirm response headers:
+```javascript
+post.on('responseHeaders', headers => {
+    console.log(headers['content-type']) //Result - 'application/json; charset=utf-8
+});
+
+//after setup, send request
+post.send({ mykey: myValue });
+```
+
+Put and Delete
+--------------
+Upload files using the `put` method
+```javascript
+let get = q.get('/path/to/dest');
+get.on('success', (res) => {
+    q.put('/data/data2.json', { file: res.text });
+});
+
+get.send();
+```
+Or delete an existing file using the delete method
+```javascript
+ q.delete('/data/data2.json', res => (alert(res.text)));
+```
