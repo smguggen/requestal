@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const Requestal = require('../index');
 const { echo } = require('ternal');
 const assert = require('assert');
