@@ -1,13 +1,13 @@
 {
   "name": "requestal",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A Node module for handling server-side HTTP requests with Javascript",
   "main": "index.js",
   "scripts": {
     "test": "node ./bin/test.js"
   },
   "bin": {
-      "test": "./bin/test.js"
+    "test": "./bin/test.js"
   },
   "repository": {
     "type": "git",
