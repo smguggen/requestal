@@ -40,10 +40,14 @@ class RequestalRequest extends ProtoRequest {
         }
         let url;
         if (typeof u === 'string') {
-            if (this.base && this.urlObject) {
-                u = u.replace(this.urlObject.origin, '');
+            if (this.base) {
+                try {
+                    let newUrl = new URL(u);
+                } catch(e) {
+                    u = this.base.trim().replace(/\/$/, '') + '/' + u.trim().replace(/^\//, '');
+                }
             }
-            url = [u, this.base || null];
+            url = [u, null];
         } else if (Array.isArray(u)) {
             url = [u[0], u[1] || this.base || null];
             if (u[1]) {

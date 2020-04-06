@@ -1,4 +1,4 @@
-# Requestal - alpha
+# Requestal
 
 A Node module for handling server-side HTTP requests with Javascript, using Node's built-in http and https modules. For making browser-based requests, see [Questal](https://www.npmjs.com/package/questal).
 
@@ -17,7 +17,7 @@ You can make `get`, `post`, `put`, `patch`, and `delete` requests with `Requesta
 const Requestal = require('requestal');
 
 //static request
-Requestal.Get('/path/to/dest', data => {
+Requestal.Get('full/path/to/dest', data => {
     console.log(data)
 });
 
@@ -45,6 +45,19 @@ post.send();
 
 //Parameters sent: { url:'/params', data: { id:17, first:'Bill', last: 'Nelson' } }
 post.send('/params', { id:17, last:'Nelson' });  
+```
+
+Base Domains
+-------------
+If you plan on making the lion's share of requests with your `Requestal` Instance to the same domain, you can pass a base url into the constructor when instantiating:
+```javascript
+const q = new Requestal('https://mydomain.com');
+```
+Then any requests with no base will use `q.base`, while passing a full url with a request will override the base:
+```javascript
+q.post('/my/path'); // Request will be sent to 'https://mydomain.com/my/path'
+
+q.post('https://yourdomain.com/my/path'); // Request will be sent to 'https://yourdomain.com/my/path'
 ```
 
 Callbacks
