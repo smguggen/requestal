@@ -1,6 +1,6 @@
 {
   "name": "requestal",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "A Node module for handling server-side HTTP requests with Javascript",
   "main": "index.js",
   "scripts": {
