@@ -1,7 +1,6 @@
 const RequestalHeaders = require('../lib/headers');
 const RequestalResponse = require('../lib/response');
-const { ProtoRequest, ProtoData } = require('@srcer/questal-proto')
-const Url = require('url');
+const { ProtoRequest } = require('@srcer/questal-proto')
 const http = require('http');
 const https = require('https');
 const { echo } = require('ternal');
