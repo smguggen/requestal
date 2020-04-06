@@ -88,7 +88,7 @@ class RequestalRequest extends ProtoRequest {
             return null;
         }
         let protocol = this.urlObject.protocol;
-        if (protocol == 'http') {
+        if (protocol.indexOf('s') < 0) {
             return http;
         }
         return https;
@@ -156,6 +156,8 @@ class RequestalRequest extends ProtoRequest {
     open(url) {
         if (!url) {
             url = this.checkUrl(url);
+        } else {
+            this.url = url;
         }
         let $this = this;
         this.events.fire('ready');
@@ -221,6 +223,7 @@ class RequestalRequest extends ProtoRequest {
         }
         this.headers = new RequestalHeaders(this.options.headers);
         this.response = new RequestalResponse({}, this.chunks, this.omitBody);
+        this.method = this.options.method || 'get';
         this.data.params = this.options.data || this.options.params;
         this.setSettings();
         this._defaultEvents();

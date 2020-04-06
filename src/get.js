@@ -43,7 +43,8 @@ class RequestalGet extends RequestalRequest {
             data = {};
         }
         let q = Object.assign({}, this.data.data, this.urlObject.searchParams, data);
-        q = this.data.parseParamsToString(q);
+        
+        q = this.data.parseParamsToString(q).replace('=undefined', '');
         if (q && q.length > 1) {
             this.urlObject.search = q;
         }

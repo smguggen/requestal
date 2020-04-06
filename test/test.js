@@ -52,13 +52,16 @@ Requestal.Post('https://srcer.com/test/data', { method: 'post' }, function(data)
 });
 
 //instantiate Requestal object
-const q = new Requestal();
+const q = new Requestal('https://srcer.com');
 
 //get request using Requestal instance
 let g = q.get('https://srcer.com/test/data');
 g.on('success', data => {
     if (checkConnection(data)) {
         methodChecks('Get Instance', data);
+        q.put('/test/data/data2.json', { file: JSON.stringify(data.json, null, '\t') }, res => {
+            assert.equal(res.text, 'PUT');
+        });
     }
 });
 g.send();
@@ -70,7 +73,6 @@ let post = q.post('/test/data',
         method:'post'
     },
     { 
-        base:'https://srcer.com',
         success: function(data) {
             assert.equal(data.json[0], '<tr><td>1.</td><td>Bill Jones</td></tr>');
             assert.equal(data.json[1], '<tr><td>2.</td><td>Jane Smith</td></tr>');
@@ -90,3 +92,16 @@ post.on('responseHeaders', (headers) => {
 });
 
 post.send({id:17, last:'Nelson'});
+
+let x = 1;
+let msg = setInterval(function() {
+    console.log('File Added, Preparing To Delete... ' + (x) + 's'); 
+    x++;
+ }, 1000);
+setTimeout(function() {
+    Requestal.Delete('https://srcer.com/test/data/data2.json', res2 => {
+        assert.equal(res2.text, 'DELETED');
+        clearInterval(msg);
+        echo('green', 'File Deleted');
+    });
+}, 5000);
