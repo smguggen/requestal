@@ -101,11 +101,9 @@ module.exports = function() {
         }
     );
 
-    post.headers.accept = 'json'; //adds 'application/json' to accept headers to be set
-
-    post.response.type = 'json'; //sets response type to application/json
-
-    post.on('responseHeaders', (headers) => {
+    post.headers.set('contentType', 'json'); //sets content type to application/json
+        
+    post.on('responseHeaders', headers => {
         assert.equal(headers['content-type'], 'application/json; charset=utf-8');
         assert.equal(post.state, 'responseHeaders');
         echo ({color:'green', format:'bold'}, 'Response Header Tests Successful');

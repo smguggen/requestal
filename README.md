@@ -95,19 +95,21 @@ Headers
 ```javascript
 let post = q.post('/data')
 
-post.headers.accept = 'json'; //adds 'application/json' to acceptheaders to be set
+post.headers.set('contentType', 'html'); // sets Content-Type to 'text/html' (default is application/json) 
 
-post.response.type = 'json'; //sets response type to application/json
+post.response.setEncoding('base64'); // sets encoding of the response to base64 (default is utf8) 
 ```
+
 You can check the response object's headers parameter to confirm response headers:
 ```javascript
 post.on('responseHeaders', headers => {
-    console.log(headers['content-type']) //Result - 'application/json; charset=utf-8
+    console.log(headers); // Prints response headers to console
 });
 
 //after setup, send request
 post.send({ mykey: myValue });
 ```
+You can override default headers by passing `options.headers` to any of the instance methods 
 
 Put and Delete
 --------------

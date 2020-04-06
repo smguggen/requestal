@@ -50,14 +50,8 @@ class RequestalRequest extends ProtoRequest {
             url = [u, null];
         } else if (Array.isArray(u)) {
             url = [u[0], u[1] || this.base || null];
-            if (u[1]) {
-                this.base = u[1];
-            }
         } else if (u && typeof u === 'object' && u.path) {
             url = [u.path, u.base || this.base || null];
-            if (u.base) {
-                this.base = u.base;
-            }
         }
         let obj;
         let $this = this;
@@ -170,7 +164,7 @@ class RequestalRequest extends ProtoRequest {
             $this.response.settings = response;
             $this.active = true;
             $this.events.fire('responseHeaders', response.headers);
-            response.setEncoding($this.headers.encoding || 'utf8');
+            response.setEncoding($this.response.encoding);
             
             response.on('error', (...err) => {
                 $this.events.fire('error', 'Response Error:', ...err)
@@ -206,14 +200,8 @@ class RequestalRequest extends ProtoRequest {
     send(body) {
         let params = super.send(body);        
         if (params) {
-            if (typeof params !== 'string' && !Buffer.isBuffer(params)) {
-                try {
-                    params = JSON.stringify(params);   
-                } catch (e) {
-                    params = ProtoData.stringify(params);
-                }
-            }
-            this.request.write(params);
+            let processedParams = this.headers.processRequestBody(params);
+            this.request.write(processedParams);
         }
         this.request.end();
         return this;
