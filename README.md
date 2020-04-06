@@ -1,4 +1,4 @@
-# Rerequestal - alpha
+# Requestal - alpha
 
 A Node module for handling server-side HTTP requests with Javascript, using Node's built-in http and https modules. For making browser-based requests, see [Questal](https://www.npmjs.com/package/questal).
 
