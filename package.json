@@ -1,7 +1,7 @@
 {
   "name": "requestal",
   "version": "1.1.5",
-  "description": "A Node module for handling server-side HTTP requests with Javascript",
+  "description": "A Node module for handling HTTP requests",
   "main": "index.js",
   "scripts": {
     "test": "node ./bin/requestal.js test"
