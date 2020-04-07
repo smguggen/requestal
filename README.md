@@ -6,7 +6,7 @@
 ![Size](https://img.shields.io/bundlephobia/min/requestal?style=plastic)
 ![Language](https://img.shields.io/github/languages/top/smguggen/requestal?style=plastic)  
 
-A Node module for handling HTTP requests, using Node's built-in http and https modules. For making browser-based requests, see [Questal](https://www.npmjs.com/package/questal).
+A Node module for handling HTTP requests. For making browser-based requests, see [Questal](https://www.npmjs.com/package/questal).
 
 Install
 -------
