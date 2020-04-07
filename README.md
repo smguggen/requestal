@@ -4,7 +4,7 @@
 ![License](https://img.shields.io/npm/l/requestal?style=plastic)
 ![Downloads](https://img.shields.io/npm/dw/requestal?style=plastic)
 ![Size](https://img.shields.io/bundlephobia/min/requestal?style=plastic)
-![Language](https://img.shields.io/github/languages/top/smguggen/requestal?style=plastic)  
+![Language](https://img.shields.io/github/languages/top/smguggen/requestal?style=plastic&logo=javascript)  
 
 A Node module for handling HTTP requests, using Node's built-in http and https modules. For making browser-based requests, see [Questal](https://www.npmjs.com/package/questal).
 
