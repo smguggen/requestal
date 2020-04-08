@@ -66,11 +66,7 @@ class Requestal {
         if (delayRequest) {
             return req;
         }
-        if (options.data) {
-            return req.send(url, options.data);
-        } else {
-            return req.send(url);
-        }
+        return req.send(url);
     }
 
     
