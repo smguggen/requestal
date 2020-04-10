@@ -1,4 +1,5 @@
 const Requestal = require('../index');
+const RequestalResponse = require('../lib/response');
 const { echo } = require('ternal');
 const util = require('util');
 const path = require('path');
@@ -96,7 +97,7 @@ class RequestalShell {
         return false;
     }
     
-    print(response, url, subset) {
+    getResponse(response, subset) {
         if (!subset || !subset.length) {
             subset = null;
         }
@@ -124,12 +125,12 @@ class RequestalShell {
             this.exit(1);
         }
         if (raw || typeof toPrint === 'string') {
+            this.raw = true;
             if (subset) {
                 let msg = typeof toPrint == 'string' ? 'string' : 'raw data';
-                echo('red', 'Cannot get subset of ' + msg + ', printing full result');
+                echo('yellow', 'Cannot get subset of ' + msg + ', printing full result');
             }
-            this.printRaw(data, url);
-            return;
+            return toPrint;
         }
         let _toPrint = toPrint.concat([]);
         let printed = this.getSubset(_toPrint, subset);
@@ -137,23 +138,19 @@ class RequestalShell {
             echo('red', 'Subset parsing failed, Status: ' + response.code + ' ' + response.status);
             this.exit(1);
         }
-        if (!this.test) {
-            this.loaded(true);
-            echo('green', 'Response from ' + url + ': ');
-        }
-        console.table(printed);
+        return printed;
     }
     
-    printRaw(data, url) {     
-        if (!data) {
-            echo('yellow', 'No Response Data Received, Status: ' + response.code + ' ' + response.status);
-            this.exit(0);
-        }
+    print(data, url) {
         if (!this.test) {
             this.loaded(true);
             echo('green', 'Response from ' + url + ': ');
         }
-        console.dir(data);
+        if (this.raw) {
+            console.dir(data);
+        } else {
+            console.table(data);
+        }
     }
     
     parseFlags(args) {
@@ -197,6 +194,14 @@ class RequestalShell {
         }
         return results;
     }
+    
+    eventWrapper(subset, callback) {
+        let $this = this;
+        return function(res) {
+            let data = res instanceof RequestalResponse ? [$this.getResponse(res, subset), res] : [res];
+            return callback(...data);
+        }
+    }
 
     getSubset(data, subset) {
         if (subset && subset.length) {
@@ -215,9 +220,9 @@ class RequestalShell {
     getEvents(events, url, subset) {
         let $this = this;
         let defaultEvents = {
-            success: res => {
-                $this.print(res, url, subset);
-            },
+            success: $this.eventWrapper(subset, data => {
+                $this.print(data, url);
+            }),
             error: err => {
                 echo('red', 'Request Failed: ' + err);
             }
@@ -231,30 +236,22 @@ class RequestalShell {
                 }
                 let e = cb[c];
                 if (typeof e === 'function') {
-                    options[c] = e;
+                    options[c] = $this.eventWrapper(subset, e);
                     continue;
                 }
-                let fn;
                 if (e) {
                     if (typeof e === 'string') {
-                        fn = function(...args) {
-                            let result;
-                            try {
-                                let ev = path.join(process.cwd(), e);
-                                result = require(ev);
-                            } catch(e) {
-                                result = e;
-                            }           
+                        try {
+                            let ev = path.join(process.cwd(), e);
+                            result = require(ev);
+                        } catch(e) {
+                            result = () => e;
+                        } finally {
                             if (typeof result === 'function') {
-                                return result(...args);
-                            } else {
-                                return result;
+                                options[c] = $this.eventWrapper(subset, result);
                             }
                         }
                     }
-                }
-                if (typeof fn === 'function') {
-                    options[c] = fn;
                 }
             }
         }
