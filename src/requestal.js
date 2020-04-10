@@ -126,6 +126,11 @@ class Requestal {
            error:onError
        });
     }
+    
+    static get eventNames() {
+        let q = new RequestalRequest();
+        return q.eventNames;
+    }
 
     _processOptions(options, key) {
         key = key || 'success';

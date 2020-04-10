@@ -3,21 +3,28 @@ const { echo } = require('ternal');
 const assert = require('assert');
 const RequestalResponse = require('../lib/response');
 const evental = require('evental').instance;
+const { spawn } = require('child_process');
 
 module.exports = function() {
     evental.on('put', () => {
         let x = 1;
+        let msgs = [
+            'File Added...',
+            'Preparing To Delete... ',
+            'Won\'t be long now... ',
+            'Almost there... '
+        ]
         let msg = setInterval(function() {
-            console.log('File Added, Preparing To Delete... ' + (x) + 's'); 
+            process.stdout.write("\r" + 'File Added, Preparing To Delete... ' + x + 's');
             x++;
         }, 1000);
         setTimeout(function() {
             Requestal.Delete('https://srcer.com/test/data/data2.json', res2 => {
                 assert.equal(res2.text, 'DELETED');
                 clearInterval(msg);
-                echo ({color:'green', format:'bold'}, 'DELETE Tests Successful');
+                echo ({color:'green', format:'bold'}, '\n\DELETE Tests Successful');
             });
-        }, 5000);
+        }, 4000);
     });
     
     function endpointActive(data) {
@@ -111,3 +118,38 @@ module.exports = function() {
 
     post.send({id:17, last:'Nelson'});
 }.call();
+/*
+const cmd = spawn('requestal', [
+    'get', 
+    'https://srcer.com/test/data',
+    '-s', '0', 'names', '1', 'first'
+]);
+
+cmd.stdout.on('data', (data) => {
+  assert.equal(data.toString(), 'Jane\n');
+  echo ({color:'green', format:'bold'}, 'Executable Test 1 Successful');
+});
+
+const cmd2 = spawn('requestal', [
+    'post', 
+    'https://srcer.com/test/data',
+    '-s', '0', 'names', '2', 'last',
+    '-d', 'method=post'
+]);
+
+cmd2.stdout.on('data', (data) => {
+    console.log(data.toString());
+  //assert.equal(data.toString(), 'Davis\n');
+  //echo ({color:'green', format:'bold'}, 'Executable Test 2 Successful');
+});
+
+const cmd3 = spawn('requestal', [
+    'post', 
+    'https://srcer.com/test/data',
+    '-on', 'success=./test/test-exec',
+    '-d', 'method=post'
+]);
+
+cmd3.stdout.on('data', (data) => {
+  console.log(data.toString());
+});*/

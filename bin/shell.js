@@ -1,40 +1,95 @@
 const Requestal = require('../index');
-const RequestalResponse = require('../lib/response');
 const { echo } = require('ternal');
 const util = require('util');
-const { exec } = require('child_process');
+const path = require('path');
+
 class RequestalShell {
     constructor() {
         this.verbose = 0;
         this.current = false;
         this.raw = null;
         this.test = false;
-        this.shell = false;
     }
-     
+    
+    fill(x, total, msg) {
+        total = total || 30;
+        let y = total - x;
+        let filledStr = Array(x).fill(' ');
+        let emptyStr = Array(y).fill(' ');
+        if (msg) {
+            let mid = Math.ceil(total/2) - 1;
+            let start = mid - Math.floor(msg.length/2);
+            let half1 = msg.substring(0, x - start);
+            let half2 = msg.substring(x - start);
+            filledStr.splice(start, half1.length, ...half1);
+            emptyStr.splice(start - total, half2.length, ...half2);
+        }
+        let output = "[\x1b[30;47m" + filledStr.join('') + "\x1b[0m" + "\x1b[37;49m" + emptyStr.join('') + "\x1b[0m]";
+        return output;
+    }
+    
+    loading(msg, length, time) {
+        time = time || 25;
+        length = length || 30;
+        let $this = this;
+        this._loading = (function() {
+            let x = 0;
+            let dir = 'asc';
+            process.stdout.write("\n\x1B[?25l")
+            return setInterval(function() {
+                if (x == length) {
+                    dir = 'desc';
+                } else if (x == 0) {
+                    dir = 'asc';
+                }
+                if (dir == 'asc') {
+                    x++;
+                } else {
+                   x--;
+                }
+                let output = $this.fill(x, length, msg);
+                process.stdout.write("\r" + output);
+            }, time);
+        })();
+    }
+    
+    exit(code) {
+        this.loaded();
+        process.exit(code);
+    }
+    
+    loaded(fill) {
+        if (this._loading) {
+            clearInterval(this._loading);
+        }
+        if (fill) {
+            let output = this.fill(30, 30, 'Done');
+            process.stdout.write("\r" + output);
+        }
+        process.stdout.write("\n\n\x1B[?25h");
+    }
+    
     isFlag(arg) {
         if (arg.startsWith('-')) {
             let key = arg.replace(/^-*/, '');
-            if (key.startsWith('opt')) {
-                this.current = 'options';
-            } else if (key == 'data' || key == 'params') {
+            if (key == 'table') {
+                this.raw = false;
+            } else if (key == 'on') {
+                this.current = 'event';
+            } else if (key.startsWith('d') || key.startsWith('p')) {
                 this.current = 'data';
+            } else if (key.startsWith('o')) {
+                this.current = 'options';
             } else if (key.startsWith('u')) {
                 this.current = 'url'
             } else if (key.startsWith('v')) {
                 this.verbose = true;
             } else if (key.startsWith('r')) {
                 this.raw = true;
-            } else if (key == 'table') {
-                this.raw = false;
             } else if (key.startsWith('s')) {
                 this.current = 'subset';
             } else if (key.startsWith('t')) {
                 this.test = true;
-            } else if (key == 'on') {
-                this.current = 'event';
-            } else if (key == 'shell') {
-                this.shell = true;
             }
             return true;
         }
@@ -48,13 +103,12 @@ class RequestalShell {
         let data = this.verbose ? response : response.json;
         if (!data) {
             echo('red', 'No Response Data available');
-            process.exit(0);
+            this.exit(1);
         }
         if (Buffer.isBuffer(data)) {
             data = data.toString();
         }
         let raw = typeof this.raw === 'boolean' ? this.raw : this.verbose ? true : false;
-        let fn = raw ? this.printRaw : this.printTable;
         let toPrint;
         if (subset && typeof data === 'string') {
             try {
@@ -79,26 +133,38 @@ class RequestalShell {
                 try {
                     return acc[pr];
                 } catch(e) {
-                    echo('red', 'Request failed, cannot parse subset ' + util.inspect(acc[pr]));
-                    process.exit(0);
+                    echo('red', 'Request failed, cannot parse subset ' + util.inspect(acc[pr]) + ', Status: ' + response.code + ' ' + response.status);
+                    this.exit(1);
                 }
             }, toPrint);
+            if (toPrint && !printed) {
+                echo('red', 'Subset parsing failed, Status: ' + response.code + ' ' + response.status);
+                this.exit(1);
+            }
         } else {
             printed = toPrint;
         }
+        if (!printed) {
+            echo('red', 'No Response Message Received, Status: ' + response.code + ' ' + response.status);
+            this.exit(1);
+        }
+        this.loaded(true);
         echo('green', 'Response from ' + url + ': ');
         console.table(printed);
-        echo('green', 'End Response');
     }
     
     printRaw(data, url) {
         if (!data) {
             echo('red', 'No Response Data available');
-            process.exit(0);
+            this.exit(1);
         }
+        if (!data) {
+            echo('red', 'No Response Message Received, Status: ' + response.code + ' ' + response.status);
+            this.exit(1);
+        }
+        this.loaded(true);
         echo('green', 'Response from ' + url + ': ');
-        console.log(util.format('%O', data));
-        echo('green', 'End Response');
+        console.dir(data);
     }
     
     parseFlags(args) {
@@ -126,7 +192,7 @@ class RequestalShell {
                         results[this.current][key] = val;
                     } else {
                         echo('red', 'Can\'t Parse ' + util.inspect(results[this.current][key] = val));
-                        process.exit(0);
+                        this.exit(1);
                     }
                 } else if (newArg) {
                     results.url = newArg;
@@ -138,58 +204,35 @@ class RequestalShell {
             let url = new URL(uri);
         } catch(e) {
             echo('red', 'Request failed, Url is invalid');
-            process.exit(0);
+            this.exit(1);
         }
         return results;
     }
     
-    getEvents(q, events) {
-        if (!q) {
-            return;
-        }
-        let defaultEvents = {
-            success: res => {
-                $this.print(res, url, subset);
-            },
-            error: err => {
-                echo('red', 'Request Failed: ' + err);
-            }
-        }
+    getEvents(defaultEvents, events) {
+        let options = {};
         let cb = Object.assign({}, defaultEvents, events || {});
         for (let c in cb) {
             if (cb.hasOwnProperty(c)) {
-                if (!q.eventNames.includes(c)) {
+                if (!Requestal.eventNames.includes(c)) {
                     continue;
                 }
                 let e = cb[c];
                 if (typeof e === 'function') {
-                    q.on(c, e);
+                    options[c] = e;
+                    continue;
                 }
                 let fn;
                 if (e) {
                     if (typeof e === 'string') {
-                        if (this.shell) {
-                            fn = function(...args) {
-                                if (args[0] && typeof args[0] === 'object' && args[0] instanceof RequestalResponse) {
-                                    args.splice(0, 1, args[0].text);
-                                }
-                                let params = args.filter(arg => arg && typeof arg === 'string');
-                                let cmd = params.length ? e + ' ' + params.join(' ') : e;
-                                exec(cmd, err => {
-                                    if (err) {
-                                        echo('red', 'Shell Script Error for Script ' + e + ': ' + err);
-                                    }
-                                });
-                            }
-                        } else {
-                            fn = function(...args) {
-                                let result;
-                                try {
-                                    result = require(e);
-                                } catch(e) {
-                                    result = e;
-                                }                
-                            }
+                        fn = function(...args) {
+                            let result;
+                            try {
+                                let ev = path.join(process.cwd(), e);
+                                result = require(ev);
+                            } catch(e) {
+                                result = e;
+                            }           
                             if (typeof result === 'function') {
                                 return result(...args);
                             } else {
@@ -199,31 +242,18 @@ class RequestalShell {
                     }
                 }
                 if (typeof fn === 'function') {
-                    q.on(c, fn);
+                    options[c] = fn;
                 }
             }
         }
+        return options;
     }
     
-    prepareRequest(method, url, data, options, subset, event) {
-        let $this = this;
-        options.success = res => {
-            $this.print(res, url, subset);
-        }
-        options.error = err => {
-            echo('red', 'Request Failed: ' + err);
-        }
-        if (['head', 'delete'].includes(method.toLowerCase())) {
-            return [url, options]
-        } else {
-            return [url, data, options];
-        }
-    }
-
     run(...args) {
+        this.loading('Loading');
         if (!args[0]) {
             echo('red', 'Request failed, Arguments Are Incomplete');
-            process.exit(0);
+            this.exit(1);
         }
         let method = args.shift();
         if (method == 'request') {
@@ -235,16 +265,35 @@ class RequestalShell {
         exists = q[method] ? true : false;
         isFunction = typeof q[method] === 'function';
         if (exists && isFunction) {
-            this.getEvents(q, event);
-            let params = this.prepareRequest(method, url, data, options, subset, event);
-            q[method](...params).send();
+            let $this = this;
+            let defaultEvents = {
+                success: res => {
+                    $this.print(res, url, subset);
+                },
+                error: err => {
+                    echo('red', 'Request Failed: ' + err);
+                }
+            }
+            let events = this.getEvents(defaultEvents, event);
+            let opts = Object.assign({}, options, events);
+            let params;
+            if (['head', 'delete'].includes(method.toLowerCase())) {
+                params = [url, opts]
+            } else {
+                params = [url, data, opts];
+            }
+            if (['get', 'post'].includes(method)) {
+                q[method](...params).send();
+            } else {
+                q[method](...params);
+            }
         } else { 
             if (!exists) {
                 echo('red', 'Request Failed, ' + method + ' is not a Requestal method');
-                process.exit(0);   
+                this.exit(1);   
             } else if (!isFunction) {
                 echo('red', 'Request Failed, ' + method + ' is not a function');
-                process.exit(0);
+                this.exit(1);
             }
         }
     }
