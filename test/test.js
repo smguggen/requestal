@@ -8,12 +8,6 @@ const { spawn } = require('child_process');
 module.exports = function() {
     evental.on('put', () => {
         let x = 1;
-        let msgs = [
-            'File Added...',
-            'Preparing To Delete... ',
-            'Won\'t be long now... ',
-            'Almost there... '
-        ]
         let msg = setInterval(function() {
             process.stdout.write("\r" + 'File Added, Preparing To Delete... ' + x + 's');
             x++;
@@ -118,38 +112,59 @@ module.exports = function() {
 
     post.send({id:17, last:'Nelson'});
 }.call();
-/*
+
 const cmd = spawn('requestal', [
     'get', 
     'https://srcer.com/test/data',
-    '-s', '0', 'names', '1', 'first'
+    '-s', '0', 'names', '1', 'first', '-t'
 ]);
-
+let count = 0;
 cmd.stdout.on('data', (data) => {
   assert.equal(data.toString(), 'Jane\n');
+  count++;
   echo ({color:'green', format:'bold'}, 'Executable Test 1 Successful');
 });
+
+cmd.stderr.on('data', err => {
+    throw new Error(err);
+})
 
 const cmd2 = spawn('requestal', [
     'post', 
     'https://srcer.com/test/data',
-    '-s', '0', 'names', '2', 'last',
+    '-s', '0', 'names', '2', 'last', '-t',
     '-d', 'method=post'
 ]);
 
 cmd2.stdout.on('data', (data) => {
-    console.log(data.toString());
-  //assert.equal(data.toString(), 'Davis\n');
-  //echo ({color:'green', format:'bold'}, 'Executable Test 2 Successful');
+    assert.ok(data.toString().indexOf(`Subset parsing failed, can't parse '<tr><td>1.</td><td>Bill Jones</td></tr>[names]'; Status: 200`) > -1);
+    count++;
+    echo ({color:'green', format:'bold'}, 'Executable Test 2 Successful');
 });
 
+cmd2.stderr.on('data', err => {
+    throw new Error(err);
+})
+
 const cmd3 = spawn('requestal', [
-    'post', 
+    'get', 
     'https://srcer.com/test/data',
     '-on', 'success=./test/test-exec',
-    '-d', 'method=post'
+    '-s', '0', 'names', '2', 'last',
+    '-d', 'method=post', '-t'
 ]);
 
 cmd3.stdout.on('data', (data) => {
-  console.log(data.toString());
-});*/
+    count++;
+    console.log(data.toString());
+});
+
+cmd3.stderr.on('data', err => {
+    throw new Error(err);
+});
+
+setTimeout(function() {
+    if (count != 3) {
+        throw new Error('Executables received ' + count + ' of 3 responses');
+    }
+}, 5000);

@@ -10,6 +10,9 @@ class RequestalShell {
         this.current = false;
         this.raw = null;
         this.test = false;
+        this.color = 'green';
+        this.message = 'Response from __: ';
+        this.request = new Requestal();
     }
     
     fill(x, total, msg) {
@@ -59,15 +62,21 @@ class RequestalShell {
         process.exit(code);
     }
     
-    loaded(fill) {
+    loaded(fill, addLine) {
+        let printed = '';
+        if (addLine) {
+            printed += "\n";
+        }
         if (this._loading) {
             clearInterval(this._loading);
             if (fill) {
+                printed += '\n';
                 let output = this.fill(30, 30, 'Done');
                 process.stdout.write("\r" + output);
             }
-            process.stdout.write("\n\n\x1B[?25h");
+            printed += "\x1B[?25h";
         }
+        process.stdout.write(printed);
     }
     
     isFlag(arg) {
@@ -98,13 +107,13 @@ class RequestalShell {
     }
     
     getResponse(response, subset) {
+        let $this = this;
         if (!subset || !subset.length) {
             subset = null;
         }
         let data = this.verbose ? response : response.json;
         if (!data) {
-            echo('yellow', 'No Response Data Received, Status: ' + response.code + ' ' + response.status);
-            this.exit(0);
+            this.setError('yellow', 'No Response Data Received, Status: ' + response.code + ' ' + response.status, 0);
         }
         if (Buffer.isBuffer(data)) {
             data = data.toString();
@@ -121,30 +130,37 @@ class RequestalShell {
             toPrint = data;
         }
         if (data && !toPrint) {
-            echo('red', 'Subset parsing failed, Status: ' + response.code + ' ' + response.status);
-            this.exit(1);
+            this.setError('red', 'Subset parsing failed, Status: ' + response.code + ' ' + response.status);
         }
         if (raw || typeof toPrint === 'string') {
             this.raw = true;
             if (subset) {
                 let msg = typeof toPrint == 'string' ? 'string' : 'raw data';
-                echo('yellow', 'Cannot get subset of ' + msg + ', printing full result');
+                this.color = 'yellow';
+                this.message = 'Cannot get subset of ' + msg + ', printing full response from __: '
             }
             return toPrint;
         }
-        let _toPrint = toPrint.concat([]);
-        let printed = this.getSubset(_toPrint, subset);
+        let printed = toPrint;
+        if (subset && subset.length) {
+            printed = subset.reduce((acc, pr) => {
+                if (acc && typeof acc == 'object') {
+                    return acc[pr] 
+                } else {
+                    $this.setError('error', 'Subset parsing failed, can\'t parse ' + util.inspect(acc + '[' + pr + ']') + '; Status: ' + response.code + ' ' + response.status);
+                }
+            }, printed);
+        }
         if (toPrint && !printed) {
-            echo('red', 'Subset parsing failed, Status: ' + response.code + ' ' + response.status);
-            this.exit(1);
+            this.setError('red', 'Subset parsing failed, Status: ' + response.code + ' ' + response.status);
         }
         return printed;
     }
     
     print(data, url) {
         if (!this.test) {
-            this.loaded(true);
-            echo('green', 'Response from ' + url + ': ');
+            this.loaded(true, true);
+            this.closingMessage(url);
         }
         if (this.raw) {
             console.dir(data);
@@ -202,19 +218,15 @@ class RequestalShell {
             return callback(...data);
         }
     }
-
-    getSubset(data, subset) {
-        if (subset && subset.length) {
-            return subset.reduce((acc, pr) => {
-                if (acc && typeof acc == 'object') {
-                    return acc[pr] 
-                } else {
-                    echo('red', 'Error: Subset parsing failed, can\'t parse ' + util.inspect(acc + '[' + pr + ']') + '; Status: ' + response.code + ' ' + response.status);
-                    this.exit(1);
-                }
-            }, data);
-        }
-        return data;
+    
+    setError(color, msg, priority) {
+        priority = priority || 1;
+        echo(color, "\n\n" + msg);
+        this.exit(priority)
+    }
+    
+    closingMessage(url) {
+        echo(this.color, this.message.replace('__', url))
     }
     
     getEvents(events, url, subset) {
@@ -223,8 +235,8 @@ class RequestalShell {
             success: $this.eventWrapper(subset, data => {
                 $this.print(data, url);
             }),
-            error: err => {
-                echo('red', 'Request Failed: ' + err);
+            error:  err => {
+                echo('red', 'Request Failed: ' + util.inspect(err));
             }
         }
         let options = {};
@@ -241,6 +253,7 @@ class RequestalShell {
                 }
                 if (e) {
                     if (typeof e === 'string') {
+                        let result;
                         try {
                             let ev = path.join(process.cwd(), e);
                             result = require(ev);
@@ -273,9 +286,8 @@ class RequestalShell {
         }
         let { url, data, options, subset, event } = this.parseFlags(args);
         let exists, isFunction;
-        let q = new Requestal();
-        exists = q[method] ? true : false;
-        isFunction = typeof q[method] === 'function';
+        exists = this.request[method] ? true : false;
+        isFunction = typeof this.request[method] === 'function';
         if (exists && isFunction) {
             let events = this.getEvents(event, url, subset);
             let opts = Object.assign({}, options, events);
@@ -286,9 +298,9 @@ class RequestalShell {
                 params = [url, data, opts];
             }
             if (['get', 'post'].includes(method)) {
-                q[method](...params).send();
+                this.request[method](...params).send();
             } else {
-                q[method](...params);
+                this.request[method](...params);
             }
         } else { 
             if (!exists) {
