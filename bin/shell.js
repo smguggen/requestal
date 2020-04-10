@@ -131,17 +131,8 @@ class RequestalShell {
             this.printRaw(data, url);
             return;
         }
-        let printed = toPrint;
-        if (subset) {
-            printed = subset.reduce((acc, pr) => {
-                try {
-                    return acc[pr];
-                } catch(e) {
-                    echo('red', 'Request failed, cannot parse subset ' + util.inspect(acc[pr]) + ', Status: ' + response.code + ' ' + response.status);
-                    this.exit(1);
-                }
-            }, printed);
-        }
+        let _toPrint = toPrint.concat([]);
+        let printed = this.getSubset(_toPrint, subset);
         if (toPrint && !printed) {
             echo('red', 'Subset parsing failed, Status: ' + response.code + ' ' + response.status);
             this.exit(1);
@@ -205,6 +196,20 @@ class RequestalShell {
             this.exit(1);
         }
         return results;
+    }
+
+    getSubset(data, subset) {
+        if (subset && subset.length) {
+            return subset.reduce((acc, pr) => {
+                if (acc && typeof acc == 'object') {
+                    return acc[pr] 
+                } else {
+                    echo('red', 'Error: Subset parsing failed, can\'t parse ' + util.inspect(acc + '[' + pr + ']') + '; Status: ' + response.code + ' ' + response.status);
+                    this.exit(1);
+                }
+            }, data);
+        }
+        return data;
     }
     
     getEvents(events, url, subset) {
