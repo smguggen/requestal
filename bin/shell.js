@@ -61,12 +61,12 @@ class RequestalShell {
     loaded(fill) {
         if (this._loading) {
             clearInterval(this._loading);
+            if (fill) {
+                let output = this.fill(30, 30, 'Done');
+                process.stdout.write("\r" + output);
+            }
+            process.stdout.write("\n\n\x1B[?25h");
         }
-        if (fill) {
-            let output = this.fill(30, 30, 'Done');
-            process.stdout.write("\r" + output);
-        }
-        process.stdout.write("\n\n\x1B[?25h");
     }
     
     isFlag(arg) {
@@ -102,8 +102,8 @@ class RequestalShell {
         }
         let data = this.verbose ? response : response.json;
         if (!data) {
-            echo('red', 'No Response Data available');
-            this.exit(1);
+            echo('yellow', 'No Response Data Received, Status: ' + response.code + ' ' + response.status);
+            this.exit(0);
         }
         if (Buffer.isBuffer(data)) {
             data = data.toString();
@@ -119,6 +119,10 @@ class RequestalShell {
         } else {
             toPrint = data;
         }
+        if (data && !toPrint) {
+            echo('red', 'Subset parsing failed, Status: ' + response.code + ' ' + response.status);
+            this.exit(1);
+        }
         if (raw || typeof toPrint === 'string') {
             if (subset) {
                 let msg = typeof toPrint == 'string' ? 'string' : 'raw data';
@@ -127,7 +131,7 @@ class RequestalShell {
             this.printRaw(data, url);
             return;
         }
-        let printed;
+        let printed = toPrint;
         if (subset) {
             printed = subset.reduce((acc, pr) => {
                 try {
@@ -136,34 +140,28 @@ class RequestalShell {
                     echo('red', 'Request failed, cannot parse subset ' + util.inspect(acc[pr]) + ', Status: ' + response.code + ' ' + response.status);
                     this.exit(1);
                 }
-            }, toPrint);
-            if (toPrint && !printed) {
-                echo('red', 'Subset parsing failed, Status: ' + response.code + ' ' + response.status);
-                this.exit(1);
-            }
-        } else {
-            printed = toPrint;
+            }, printed);
         }
-        if (!printed) {
-            echo('red', 'No Response Message Received, Status: ' + response.code + ' ' + response.status);
+        if (toPrint && !printed) {
+            echo('red', 'Subset parsing failed, Status: ' + response.code + ' ' + response.status);
             this.exit(1);
         }
-        this.loaded(true);
-        echo('green', 'Response from ' + url + ': ');
+        if (!this.test) {
+            this.loaded(true);
+            echo('green', 'Response from ' + url + ': ');
+        }
         console.table(printed);
     }
     
-    printRaw(data, url) {
+    printRaw(data, url) {     
         if (!data) {
-            echo('red', 'No Response Data available');
-            this.exit(1);
+            echo('yellow', 'No Response Data Received, Status: ' + response.code + ' ' + response.status);
+            this.exit(0);
         }
-        if (!data) {
-            echo('red', 'No Response Message Received, Status: ' + response.code + ' ' + response.status);
-            this.exit(1);
+        if (!this.test) {
+            this.loaded(true);
+            echo('green', 'Response from ' + url + ': ');
         }
-        this.loaded(true);
-        echo('green', 'Response from ' + url + ': ');
         console.dir(data);
     }
     
@@ -191,7 +189,7 @@ class RequestalShell {
                     if (this.current && key && val) {
                         results[this.current][key] = val;
                     } else {
-                        echo('red', 'Can\'t Parse ' + util.inspect(results[this.current][key] = val));
+                        echo('red', 'Can\'t Parse ' + util.inspect(`${results} [${this.current}][${key}] = ${val}`));
                         this.exit(1);
                     }
                 } else if (newArg) {
@@ -209,7 +207,16 @@ class RequestalShell {
         return results;
     }
     
-    getEvents(defaultEvents, events) {
+    getEvents(events, url, subset) {
+        let $this = this;
+        let defaultEvents = {
+            success: res => {
+                $this.print(res, url, subset);
+            },
+            error: err => {
+                echo('red', 'Request Failed: ' + err);
+            }
+        }
         let options = {};
         let cb = Object.assign({}, defaultEvents, events || {});
         for (let c in cb) {
@@ -250,7 +257,10 @@ class RequestalShell {
     }
     
     run(...args) {
-        this.loading('Loading');
+        this.test = args.some(arg => /^\-\-?[tT]/.test(arg));
+        if (!this.test) {
+            this.loading('Loading');
+        }
         if (!args[0]) {
             echo('red', 'Request failed, Arguments Are Incomplete');
             this.exit(1);
@@ -265,16 +275,7 @@ class RequestalShell {
         exists = q[method] ? true : false;
         isFunction = typeof q[method] === 'function';
         if (exists && isFunction) {
-            let $this = this;
-            let defaultEvents = {
-                success: res => {
-                    $this.print(res, url, subset);
-                },
-                error: err => {
-                    echo('red', 'Request Failed: ' + err);
-                }
-            }
-            let events = this.getEvents(defaultEvents, event);
+            let events = this.getEvents(event, url, subset);
             let opts = Object.assign({}, options, events);
             let params;
             if (['head', 'delete'].includes(method.toLowerCase())) {
