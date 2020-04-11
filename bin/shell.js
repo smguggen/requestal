@@ -10,9 +10,18 @@ class RequestalShell {
         this.current = false;
         this.raw = null;
         this.test = false;
+        this.silent = false;
         this.color = 'green';
         this.message = 'Response from __: ';
         this.request = new Requestal();
+        let $this = this;
+        process.on('exit', () => {
+            if ($this._loading) {
+                process.stdout.write("\r" + "\x1B[?25h");
+            }
+        });
+        process.on('SIGINT', number => $this.unplannedExit(number));
+        process.on('SIGTERM', number => $this.unplannedExit(number));
     }
     
     fill(x, total, msg) {
@@ -56,12 +65,7 @@ class RequestalShell {
             }, time);
         })();
     }
-    
-    exit(code) {
-        this.loaded();
-        process.exit(code);
-    }
-    
+
     loaded(fill, addLine) {
         let printed = '';
         if (addLine) {
@@ -74,9 +78,19 @@ class RequestalShell {
                 let output = this.fill(30, 30, 'Done');
                 process.stdout.write("\r" + output);
             }
-            printed += "\x1B[?25h";
         }
         process.stdout.write(printed);
+    }
+    
+    exit(code) {
+        this.loaded();
+        process.exit(code);
+    }
+    
+    unplannedExit(number) {
+        this.loaded();
+        process.stdout.write("\n" + "\x1B[?25h");
+        process.exit(128 + number);
     }
     
     isFlag(arg) {
@@ -86,10 +100,16 @@ class RequestalShell {
                 this.raw = false;
             } else if (key == 'on') {
                 this.current = 'event';
+            } else if (key == 'silent') {
+                this.silent = true;
+            } else if (key == 'timeout') {
+                this.current = 'timeout';
             } else if (key.startsWith('d') || key.startsWith('p')) {
                 this.current = 'data';
-            } else if (key.startsWith('o')) {
-                this.current = 'options';
+            } else if (key.startsWith('h')) {
+                this.current = 'headers';
+            } else if (key.startsWith('e')) {
+                this.current = 'encoding';
             } else if (key.startsWith('u')) {
                 this.current = 'url'
             } else if (key.startsWith('v')) {
@@ -107,10 +127,20 @@ class RequestalShell {
     }
     
     getResponse(response, subset) {
-        let $this = this;
+        if (this.silent) {
+            this.color = response.isSuccess() ? 'green' : 'red';
+            this.message = 'Status: ' + response.code + ' ' + response.status;
+            let length = response.settings && 
+                response.settings.headers && 
+                response.settings.headers['content-length'] > -1 ? 
+                response.settings.headers['content-length'] : 'Unknown';
+            this.message += '; Response Size: ' + length;
+            return {};
+        }
         if (!subset || !subset.length) {
             subset = null;
         }
+        
         let data = this.verbose ? response : response.json;
         if (!data) {
             this.setError('yellow', 'No Response Data Received, Status: ' + response.code + ' ' + response.status, 0);
@@ -144,15 +174,25 @@ class RequestalShell {
         let printed = toPrint;
         if (subset && subset.length) {
             printed = subset.reduce((acc, pr) => {
-                if (acc && typeof acc == 'object') {
-                    return acc[pr] 
-                } else {
-                    $this.setError('error', 'Subset parsing failed, can\'t parse ' + util.inspect(acc + '[' + pr + ']') + '; Status: ' + response.code + ' ' + response.status);
+                try {
+                    if (acc && typeof acc == 'object') {
+                        return acc[pr] 
+                    } else {
+                        return null;
+                    }
+                } catch(e) {
+                    return null;
                 }
             }, printed);
         }
         if (toPrint && !printed) {
-            this.setError('red', 'Subset parsing failed, Status: ' + response.code + ' ' + response.status);
+            if (response.status == 'OK') {
+                this.color = 'yellow';
+                this.message = 'Subset parsing failed, printing full response from __:';
+                printed = toPrint;
+            } else {
+                this.setError('red', 'Subset parsing failed, Status: ' + response.code + ' ' + response.status);
+            }
         }
         return printed;
     }
@@ -162,20 +202,24 @@ class RequestalShell {
             this.loaded(true, true);
             this.closingMessage(url);
         }
-        if (this.raw) {
-            console.dir(data);
-        } else {
-            console.table(data);
+        if (!this.silent) {
+            if (this.raw) {
+                console.dir(data);
+            } else {
+                console.table(data);
+            }
         }
     }
     
     parseFlags(args) {
         let results = {
-            options:{},
             data:{},
             url:'',
             subset: [],
-            event: {}
+            event: {},
+            headers: {},
+            encoding: '',
+            timeout: 30000
         }
         for (let i = 0; i < args.length; i++) {
             let arg = args[i];
@@ -183,10 +227,14 @@ class RequestalShell {
                 continue;
             }
             let newArg = args[i];
-            if (newArg && !this.current) {
+            if (!this.current) {
                 results.url = newArg;
             } else if (this.current == 'subset') {
                 results.subset.push(newArg);
+            } else if (this.current == 'encoding') {
+                results.encoding = newArg;
+            } else if (this.current == 'timeout') {
+                results.timeout = newArg;
             } else {
                 if (newArg.indexOf('=') > -1) {
                     let [key, val] = newArg.split('=');
@@ -201,9 +249,8 @@ class RequestalShell {
                 }
             }
         }
-        let uri = results.options.url || results.url;
         try {
-            let url = new URL(uri);
+            let url = new URL(results.url);
         } catch(e) {
             echo('red', 'Request failed, Url is invalid');
             this.exit(1);
@@ -284,7 +331,15 @@ class RequestalShell {
         if (method == 'request') {
             method = 'get';
         }
-        let { url, data, options, subset, event } = this.parseFlags(args);
+        let { url, data, subset, event, headers, encoding, timeout } = this.parseFlags(args);
+        let options = {};
+        if (headers && Object.keys(headers).length) {
+            options.headers = headers;
+        }
+        if (encoding) {
+            options.encoding = encoding;
+        }
+        options.timeout = timeout;
         let exists, isFunction;
         exists = this.request[method] ? true : false;
         isFunction = typeof this.request[method] === 'function';

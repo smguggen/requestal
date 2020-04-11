@@ -23,7 +23,7 @@ class RequestalDelete extends RequestalRequest {
         super.send(data);
     }
 
-    _onReady() {
+    onReady() {
         let $this = this;
         this.on('ready', () => {
             $this.headers.init();

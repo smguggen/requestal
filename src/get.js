@@ -22,15 +22,6 @@ class RequestalGet extends RequestalRequest {
         super.open(this.url)
         super.send();
     }
-
-    _onReady(options) {
-        let $this = this;
-        this.on('ready', () => {
-            let type = options.accept || ['plain', 'xml', 'html'];
-            $this.headers.accept = type;
-            $this.headers.init();
-        });
-    }
     
     setQueryString(url, data) {
 

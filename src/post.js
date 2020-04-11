@@ -21,16 +21,6 @@ class RequestalPost extends RequestalRequest {
         super.open(url);
         super.send(data);
     }
-
-    onReady(options) {
-        let $this = this;
-        options = options || this.options;
-        this.on('ready', () => {
-            let type = options.headers.accept || ['application/json'];
-            $this.headers.accept = type;
-            $this.headers.init();
-        });
-    }
 }
 
 module.exports = RequestalPost;

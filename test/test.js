@@ -132,12 +132,11 @@ cmd.stderr.on('data', err => {
 const cmd2 = spawn('requestal', [
     'post', 
     'https://srcer.com/test/data',
-    '-s', '0', 'names', '2', 'last', '-t',
-    '-d', 'method=post'
+    '-s', '0', '-d', 'method=post', '-t'
 ]);
 
 cmd2.stdout.on('data', (data) => {
-    assert.ok(data.toString().indexOf(`Subset parsing failed, can't parse '<tr><td>1.</td><td>Bill Jones</td></tr>[names]'; Status: 200`) > -1);
+    assert.equal(data.toString(), '<tr><td>1.</td><td>Bill Jones</td></tr>\n');
     count++;
     echo ({color:'green', format:'bold'}, 'Executable Test 2 Successful');
 });

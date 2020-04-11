@@ -214,10 +214,14 @@ class RequestalRequest extends ProtoRequest {
         }
         this.headers = new RequestalHeaders(this.options.headers);
         this.response = new RequestalResponse({}, this.chunks, this.omitBody);
+        if (this.options.encoding) {
+            this.response.setEncoding(this.options.encoding);
+        }
         this.method = this.options.method || 'get';
         this.data.params = this.options.data || this.options.params;
         this.setSettings();
         this._defaultEvents();
+        this.onReady(options);
     }
     
     setOptions(options) {
@@ -292,6 +296,17 @@ class RequestalRequest extends ProtoRequest {
         });
         this.events.onCalc('data', data => {
            return data;
+        });
+    }
+    
+    onReady(options) {
+        let $this = this;
+        options = options || this.options;
+        this.on('ready', () => {
+            options.headers = options.headers || {};
+            let type = options.headers.accept || ['application/json'];
+            $this.headers.accept = type;
+            $this.headers.init();
         });
     }
 }

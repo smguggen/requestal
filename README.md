@@ -131,4 +131,102 @@ get.send();
 Or delete an existing file using the delete method
 ```javascript
  q.delete('/data/data2.json', res => (alert(res.text)));
+ ```
+ 
+# Version 2.0
+
+New in Version 2, you can run requests on the command line with the `requestal` terminal command. 
+```console
+foo:bar foo$ requestal <method> <url> [-p | --params | -d | --data <name>=<value>]
+             [-s | --subset <key>] [-h | --headers <name=value>] [--on <path/to/module>]
+             [-e | --encoding <value>] [--timeout <value>] [-v | --verbose] 
+             [-r | --raw] [--table] [-t | --test] [--silent]
 ```
+
+Arguments
+---------
+* **method**  
+    The request method to use: `get`, `post`, `put`, `patch`, `head`, or `delete`.  
+
+* **url**  
+    The full url and path to the request destination  
+   
+   
+Flags
+-----
+* **-p | --params | -d | --data**  
+    The data to send along with the request. As for any way you use requestal, these can be in the form of a query string tacked on to the url or as a parameter object, here expressed as `-p id=myId name=myName`  
+
+* **-s | --subset**  
+   View a subset of the returned data in the console. If the subset doesn't exist the response defaults to the full response.
+   ```console
+    foo:bar foo$ requestal post https://mydomain/myendpoint 
+    
+    Response from https://srcer.com/test/data: 
+    ┌─────────┬────┬────────┬─────────┐
+    │ (index) │ id │ first  │  last   │
+    ├─────────┼────┼────────┼─────────┤
+    │    0    │ 1  │ 'Bill' │ 'Jones' │
+    │    1    │ 2  │ 'Jane' │ 'Smith' │
+    │    2    │ 3  │ 'Bob'  │ 'Davis' │
+    └─────────┴────┴────────┴─────────┘
+    
+    foo:bar foo$ requestal get https://srcer.com/test/data -s first
+    
+    Subset parsing failed, printing full response from https://srcer.com/test/data:
+    ┌─────────┬────┬────────┬─────────┐
+    │ (index) │ id │ first  │  last   │
+    ├─────────┼────┼────────┼─────────┤
+    │    0    │ 1  │ 'Bill' │ 'Jones' │
+    │    1    │ 2  │ 'Jane' │ 'Smith' │
+    │    2    │ 3  │ 'Bob'  │ 'Davis' │
+    └─────────┴────┴────────┴─────────┘
+    
+    foo:bar foo$ requestal get https://srcer.com/test/data -s 0 first
+    
+    Response from https://srcer.com/test/data: 
+    Bill
+   ```  
+
+* **-h | --headers**  
+    Set headers for the request here in a `<key>=<value>` fashion:
+    ```console
+    foo:bar foo$ requestal get https://srcer.com/test/data -s 0 first -h contentType=json connection=keep-alive
+    ```  
+    
+* **-on**  
+    Set event handlers here in an `<event>=<path/to/module>` fashion. If the module exists it will be pulled via `require` and then if it's a function it will be passed as an event callback:
+    ```javascript
+    // myfile.js
+    module.exports = function(data) {
+        console.log(data);
+    }
+    ```
+    ```console
+    foo:bar foo$ requestal get https://srcer.com/test/data -s 0 first -on success=./myfile.js
+    
+    Response from https://srcer.com/test/data: 
+    Bill
+    ``` 
+    
+* **-e | --encoding**  
+    Set the encoding of the response, default is `utf8`:
+    ```console
+    foo:bar foo$ requestal get https://srcer.com/test/data -s 0 first -e utf16
+    筛渢浡獥㨢筛椢≤ㄺ∬楦獲≴∺楂汬Ⱒ氢獡≴∺潊敮≳ⱽ≻摩㨢ⰲ昢物瑳㨢䨢湡≥∬慬瑳㨢匢業桴索第椢≤㌺∬楦獲≴∺潂≢∬慬瑳㨢䐢癡獩索絝
+    ```
+    
+* **--timeout**  
+    Set the time in milliseconds until the process times out, default is 30000
+
+* **-v | --verbose**  
+    Activating this flag will send the full response object back rather than just the response body:
+    ``` 
+* **-r | --raw**  
+
+* **--table**
+
+* **-t || --test**  
+
+* **--silent**
+
