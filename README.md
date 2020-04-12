@@ -140,7 +140,7 @@ New in Version 2, you can run requests on the command line with the `requestal` 
 foo:bar foo$ requestal <method> <url> [-p | --params | -d | --data <name>=<value>]
              [-s | --subset <key>] [-h | --headers <name=value>] [--on <path/to/module>]
              [-e | --encoding <value>] [--timeout <value>] [-v | --verbose] 
-             [-r | --raw] [--table] [--test] [--silent]
+             [-r | --raw] [--silent]
 ```
 
 Arguments
@@ -217,16 +217,18 @@ Flags
     ```
     
 * **--timeout**  
-    Set the time in milliseconds until the process times out, default is 30000
+    Set the time in milliseconds that the process will wait for response before exiting, default is 30000
 
 * **-v | --verbose**  
-    Activating this flag will send the full response object back rather than just the response body:
-    ``` 
+    Activating this flag will send the full response object back rather than just the response body  
+    
 * **-r | --raw**  
+    Will send back the raw response body rather than the formatted table structure that is the default.
 
-* **--table**
-
-* **--test**  
-
-* **--silent**
+* **--silent**  
+    Rather than printing response body, will only print response status code and message as well as the content-length from the response header:
+    ```console
+    foo:bar foo$ requestal get https://srcer.com/test/data -s 0 first --silent
+    Status: 200 OK; Response Size: 129
+    ```
 
