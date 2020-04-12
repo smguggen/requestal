@@ -159,7 +159,7 @@ Flags
 
 * **-s | --subset**  
    View a subset of the returned data in the console. If the subset doesn't exist the response defaults to the full response.
-   ```console
+   ```bash
     foo:bar foo$ requestal post https://mydomain/myendpoint 
     
     Response from https://srcer.com/test/data: 
@@ -190,7 +190,7 @@ Flags
 
 * **-h | --headers**  
     Set headers for the request here in a `<key>=<value>` fashion:
-    ```console
+    ```bash
     foo:bar foo$ requestal get https://srcer.com/test/data -s 0 first -h contentType=json connection=keep-alive
     ```  
     
@@ -202,7 +202,7 @@ Flags
         console.log(data);
     }
     ```
-    ```console
+    ```bash
     foo:bar foo$ requestal get https://srcer.com/test/data -s 0 first -on success=./myfile.js
     
     Response from https://srcer.com/test/data: 
@@ -211,7 +211,7 @@ Flags
     
 * **-e | --encoding**  
     Set the encoding of the response, default is `utf8`:
-    ```console
+    ```bash
     foo:bar foo$ requestal get https://srcer.com/test/data -s 0 first -e utf16
     筛渢浡獥㨢筛椢≤ㄺ∬楦獲≴∺楂汬Ⱒ氢獡≴∺潊敮≳ⱽ≻摩㨢ⰲ昢物瑳㨢䨢湡≥∬慬瑳㨢匢業桴索第椢≤㌺∬楦獲≴∺潂≢∬慬瑳㨢䐢癡獩索絝
     ```
@@ -227,7 +227,7 @@ Flags
 
 * **--silent**  
     Rather than printing response body, will only print response status code and message as well as the content-length from the response header:
-    ```console
+    ```bash
     foo:bar foo$ requestal get https://srcer.com/test/data -s 0 first --silent
     Status: 200 OK; Response Size: 129
     ```
