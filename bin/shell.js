@@ -3,6 +3,7 @@ const RequestalResponse = require('../lib/response');
 const { echo } = require('ternal');
 const util = require('util');
 const path = require('path');
+const evental = require('evental').instance;
 
 class RequestalShell {
     constructor() {
@@ -20,8 +21,8 @@ class RequestalShell {
                 process.stdout.write("\r" + "\x1B[?25h");
             }
         });
-        process.on('SIGINT', number => $this.unplannedExit(number));
-        process.on('SIGTERM', number => $this.unplannedExit(number));
+        process.on('SIGINT', number => $this.unplannedExit(128 + number));
+        process.on('SIGTERM', number => $this.unplannedExit(128 + number));
     }
     
     fill(x, total, msg) {
@@ -87,10 +88,13 @@ class RequestalShell {
         process.exit(code);
     }
     
-    unplannedExit(number) {
+    unplannedExit(number, msg) {
         this.loaded();
         process.stdout.write("\n" + "\x1B[?25h");
-        process.exit(128 + number);
+        if (msg) {
+            echo('red', msg);
+        }
+        process.exit(number);
     }
     
     isFlag(arg) {
@@ -104,6 +108,8 @@ class RequestalShell {
                 this.silent = true;
             } else if (key == 'timeout') {
                 this.current = 'timeout';
+            } else if (key == 'test') {
+                this.test = true;
             } else if (key.startsWith('d') || key.startsWith('p')) {
                 this.current = 'data';
             } else if (key.startsWith('h')) {
@@ -118,8 +124,6 @@ class RequestalShell {
                 this.raw = true;
             } else if (key.startsWith('s')) {
                 this.current = 'subset';
-            } else if (key.startsWith('t')) {
-                this.test = true;
             }
             return true;
         }
@@ -178,10 +182,10 @@ class RequestalShell {
                     if (acc && typeof acc == 'object') {
                         return acc[pr] 
                     } else {
-                        return null;
+                        return acc;
                     }
                 } catch(e) {
-                    return null;
+                    return acc;
                 }
             }, printed);
         }
@@ -233,8 +237,8 @@ class RequestalShell {
                 results.subset.push(newArg);
             } else if (this.current == 'encoding') {
                 results.encoding = newArg;
-            } else if (this.current == 'timeout') {
-                results.timeout = newArg;
+            } else if (this.current == 'timeout' && !isNaN(Number(newArg))) {
+                results.timeout = Number(newArg);
             } else {
                 if (newArg.indexOf('=') > -1) {
                     let [key, val] = newArg.split('=');
@@ -276,18 +280,26 @@ class RequestalShell {
         echo(this.color, this.message.replace('__', url))
     }
     
-    getEvents(events, url, subset) {
+    defaultEvents(url, subset) {
         let $this = this;
-        let defaultEvents = {
+        return {
             success: $this.eventWrapper(subset, data => {
                 $this.print(data, url);
             }),
-            error:  err => {
-                echo('red', 'Request Failed: ' + util.inspect(err));
+            error: err => {
+                $this.unplannedExit(1, "\n" + "Request Failed: " + util.inspect(err));
+            },
+            timeout: () => {
+                $this.unplannedExit(0, "\n" + 'Request Took Too Long To Respond, Exiting...');
             }
         }
+    }
+    
+    getEvents(events, url, subset) {
+        let $this = this;
         let options = {};
-        let cb = Object.assign({}, defaultEvents, events || {});
+        
+        let cb = Object.assign({}, this.defaultEvents(url, subset), events || {});
         for (let c in cb) {
             if (cb.hasOwnProperty(c)) {
                 if (!Requestal.eventNames.includes(c)) {
@@ -319,7 +331,7 @@ class RequestalShell {
     }
     
     run(...args) {
-        this.test = args.some(arg => /^\-\-?[tT]/.test(arg));
+        this.test = args.some(arg => /^\-\-?test/i.test(arg));
         if (!this.test) {
             this.loading('Loading');
         }
@@ -345,12 +357,14 @@ class RequestalShell {
         isFunction = typeof this.request[method] === 'function';
         if (exists && isFunction) {
             let events = this.getEvents(event, url, subset);
-            let opts = Object.assign({}, options, events);
+            if (events && Object.keys(events).length) {
+                options.events = events;
+            }
             let params;
             if (['head', 'delete'].includes(method.toLowerCase())) {
-                params = [url, opts]
+                params = [url, options]
             } else {
-                params = [url, data, opts];
+                params = [url, data, options];
             }
             if (['get', 'post'].includes(method)) {
                 this.request[method](...params).send();

@@ -36,7 +36,7 @@
   },
   "homepage": "https://github.com/smguggen/requestal#readme",
   "dependencies": {
-    "@srcer/questal-proto": "^3.3.4",
+    "@srcer/questal-proto": "^3.3.5",
     "ternal": "^1.0.3"
   },
   "devDependencies": {

@@ -140,7 +140,7 @@ New in Version 2, you can run requests on the command line with the `requestal` 
 foo:bar foo$ requestal <method> <url> [-p | --params | -d | --data <name>=<value>]
              [-s | --subset <key>] [-h | --headers <name=value>] [--on <path/to/module>]
              [-e | --encoding <value>] [--timeout <value>] [-v | --verbose] 
-             [-r | --raw] [--table] [-t | --test] [--silent]
+             [-r | --raw] [--table] [--test] [--silent]
 ```
 
 Arguments
@@ -226,7 +226,7 @@ Flags
 
 * **--table**
 
-* **-t || --test**  
+* **--test**  
 
 * **--silent**
 

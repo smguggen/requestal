@@ -116,7 +116,7 @@ module.exports = function() {
 const cmd = spawn('requestal', [
     'get', 
     'https://srcer.com/test/data',
-    '-s', '0', 'names', '1', 'first', '-t'
+    '-s', '0', 'names', '1', 'first', '-test'
 ]);
 let count = 0;
 cmd.stdout.on('data', (data) => {
@@ -132,7 +132,7 @@ cmd.stderr.on('data', err => {
 const cmd2 = spawn('requestal', [
     'post', 
     'https://srcer.com/test/data',
-    '-s', '0', '-d', 'method=post', '-t'
+    '-s', '0', '-d', 'method=post', '-test'
 ]);
 
 cmd2.stdout.on('data', (data) => {
@@ -150,7 +150,7 @@ const cmd3 = spawn('requestal', [
     'https://srcer.com/test/data',
     '-on', 'success=./test/test-exec',
     '-s', '0', 'names', '2', 'last',
-    '-d', 'method=post', '-t'
+    '-d', 'method=post', '-test'
 ]);
 
 cmd3.stdout.on('data', (data) => {

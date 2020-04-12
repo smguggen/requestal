@@ -106,6 +106,9 @@ class RequestalRequest extends ProtoRequest {
             defaultPort: ['port', 'defaultPort'],
             timeout: ['timeout']
         }
+        let defaults = {
+            timeout: 30000
+        }
         let settings = {
             method: $this.method.toUpperCase(),
         }
@@ -122,7 +125,7 @@ class RequestalRequest extends ProtoRequest {
                 }
             }
         }, this);
-        this.settings = ({}, this.settings, settings);
+        this.settings = Object.assign({}, defaults, this.settings, settings);
         return this;
     }
     
@@ -169,7 +172,8 @@ class RequestalRequest extends ProtoRequest {
                 $this.events.fire('error', 'Response Error:', ...err)
             });
             response.on('data', chunk => {
-                $this.chunks = $this.events.calc('data', chunk); 
+                $this.events.fire('data');
+                $this.chunks = $this.events.get('data').__calc('data', chunk); 
             });
             
             response.on('end', () => {
@@ -185,7 +189,7 @@ class RequestalRequest extends ProtoRequest {
             });
         }
         this.request.on('error', (...err) => {
-            $this.events.fire('error', 'Request Error:', ...err);
+            $this.events.fire('error', 'Request Error:', ...err || 'Unknown');
         });
         this.request.on('abort', () => {
            $this.events.fire('abort'); 
@@ -223,10 +227,21 @@ class RequestalRequest extends ProtoRequest {
         this._defaultEvents();
         this.onReady(options);
     }
-    
+        
     setOptions(options) {
         options = options || {};
         this.options = {};
+        if (options.events && typeof options.events === 'object') {
+            let eventKeys = Object.keys(options.events);
+            for (let j = 0; j < eventKeys.length; j++) {
+                let eventKey = eventKeys[j];
+                let eventOption = options.events[eventKey];
+                if (this.eventNames && this.eventNames.includes(eventKey) && typeof eventOption === 'function') {
+                    this.on(eventKey, eventOption);
+                }
+            }
+            delete options.events;
+        }
         let keys = Object.keys(options);
         for (let i = 0; i < keys.length; i++) {
             let key = keys[i];
