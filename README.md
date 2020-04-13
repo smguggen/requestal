@@ -4,13 +4,12 @@
 ![License](https://img.shields.io/npm/l/requestal?style=plastic)
 ![Downloads](https://img.shields.io/npm/dw/requestal?style=plastic)
 ![Size](https://img.shields.io/bundlephobia/min/requestal?style=plastic)
-![Language](https://img.shields.io/github/languages/top/smguggen/requestal?style=plastic)  
 
 A Node module for handling HTTP requests. For making browser-based requests, see [Questal](https://www.npmjs.com/package/questal).
 
 Install
 -------
-```console
+```bash
 npm install requestal
 ```
 
@@ -136,7 +135,7 @@ Or delete an existing file using the delete method
 # Version 2.0
 
 New in Version 2, you can run requests on the command line with the `requestal` terminal command. 
-```console
+```bash
 foo:bar foo$ requestal <method> <url> [-p | --params | -d | --data <name>=<value>]
              [-s | --subset <key>] [-h | --headers <name=value>] [--on <path/to/module>]
              [-e | --encoding <value>] [--timeout <value>] [-v | --verbose] 

@@ -132,14 +132,7 @@ class RequestalShell {
     
     getResponse(response, subset) {
         if (this.silent) {
-            this.color = response.isSuccess() ? 'green' : 'red';
-            this.message = 'Status: ' + response.code + ' ' + response.status;
-            let length = response.settings && 
-                response.settings.headers && 
-                response.settings.headers['content-length'] > -1 ? 
-                response.settings.headers['content-length'] : 'Unknown';
-            this.message += '; Response Size: ' + length;
-            return {};
+            return this.silence(response);
         }
         if (!subset || !subset.length) {
             subset = null;
@@ -177,17 +170,7 @@ class RequestalShell {
         }
         let printed = toPrint;
         if (subset && subset.length) {
-            printed = subset.reduce((acc, pr) => {
-                try {
-                    if (acc && typeof acc == 'object') {
-                        return acc[pr] 
-                    } else {
-                        return acc;
-                    }
-                } catch(e) {
-                    return acc;
-                }
-            }, printed);
+            printed = this.getSubset(subset, printed);
         }
         if (toPrint && !printed) {
             if (response.status == 'OK') {
@@ -380,6 +363,35 @@ class RequestalShell {
                 this.exit(1);
             }
         }
+    }
+    
+    
+    silence(response) {
+        this.color = response.isSuccess() ? 'green' : 'red';
+        this.message = 'Status: ' + response.code + ' ' + response.status;
+        let length = response.settings && 
+            response.settings.headers && 
+            response.settings.headers['content-length'] > -1 ? 
+            response.settings.headers['content-length'] : 'Unknown';
+        this.message += '; Response Size: ' + length;
+        return {};
+    }
+    
+    getSubset(subset, printed) {
+        if (!Array.isArray(subset)) {
+            return printed;
+        }
+        return subset.reduce((acc, pr) => {
+            try {
+                if (acc && typeof acc == 'object') {
+                    return acc[pr] 
+                } else {
+                    return acc;
+                }
+            } catch(e) {
+                return acc;
+            }
+        }, printed);
     }
 }
 
