@@ -213,6 +213,8 @@ Flags
     Set the encoding of the response, default is `utf8`:
     ```bash
     foo:bar foo$ requestal get https://srcer.com/test/data -s 0 first -e utf16
+    
+    Response from https://srcer.com/test/data: 
     筛渢浡獥㨢筛椢≤ㄺ∬楦獲≴∺楂汬Ⱒ氢獡≴∺潊敮≳ⱽ≻摩㨢ⰲ昢物瑳㨢䨢湡≥∬慬瑳㨢匢業桴索第椢≤㌺∬楦獲≴∺潂≢∬慬瑳㨢䐢癡獩索絝
     ```
     
