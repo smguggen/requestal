@@ -161,7 +161,7 @@ Flags
    ```bash
     foo:bar foo$ requestal post https://mydomain/myendpoint 
     
-    Response from https://srcer.com/test/data: 
+    Response from https://mydomain/myendpoint: 
     ┌─────────┬────┬────────┬─────────┐
     │ (index) │ id │ first  │  last   │
     ├─────────┼────┼────────┼─────────┤
@@ -170,9 +170,9 @@ Flags
     │    2    │ 3  │ 'Bob'  │ 'Davis' │
     └─────────┴────┴────────┴─────────┘
     
-    foo:bar foo$ requestal get https://srcer.com/test/data -s first
+    foo:bar foo$ requestal get https://mydomain/myendpoint -s first
     
-    Subset parsing failed, printing full response from https://srcer.com/test/data:
+    Subset parsing failed, printing full response from https://mydomain/myendpoint:
     ┌─────────┬────┬────────┬─────────┐
     │ (index) │ id │ first  │  last   │
     ├─────────┼────┼────────┼─────────┤
@@ -181,16 +181,16 @@ Flags
     │    2    │ 3  │ 'Bob'  │ 'Davis' │
     └─────────┴────┴────────┴─────────┘
     
-    foo:bar foo$ requestal get https://srcer.com/test/data -s 0 first
+    foo:bar foo$ requestal get https://mydomain/myendpoint -s 0 first
     
-    Response from https://srcer.com/test/data: 
+    Response from https://mydomain/myendpoint: 
     Bill
    ```  
 
 * **-h | --headers**  
     Set headers for the request here in a `<key>=<value>` fashion:
     ```bash
-    foo:bar foo$ requestal get https://srcer.com/test/data -s 0 first -h contentType=json connection=keep-alive
+    foo:bar foo$ requestal get https://mydomain/myendpoint -s 0 first -h contentType=json connection=keep-alive
     ```  
     
 * **-on**  
@@ -202,18 +202,18 @@ Flags
     }
     ```
     ```bash
-    foo:bar foo$ requestal get https://srcer.com/test/data -s 0 first -on success=./myfile.js
+    foo:bar foo$ requestal get https://mydomain/myendpoint -s 0 first -on success=./myfile.js
     
-    Response from https://srcer.com/test/data: 
+    Response from https://mydomain/myendpoint: 
     Bill
     ``` 
     
 * **-e | --encoding**  
     Set the encoding of the response, default is `utf8`:
     ```bash
-    foo:bar foo$ requestal get https://srcer.com/test/data -s 0 first -e utf16
+    foo:bar foo$ requestal get https://mydomain/myendpoint -s 0 first -e utf16
     
-    Response from https://srcer.com/test/data: 
+    Response from https://mydomain/myendpoint: 
     筛渢浡獥㨢筛椢≤ㄺ∬楦獲≴∺楂汬Ⱒ氢獡≴∺潊敮≳ⱽ≻摩㨢ⰲ昢物瑳㨢䨢湡≥∬慬瑳㨢匢業桴索第椢≤㌺∬楦獲≴∺潂≢∬慬瑳㨢䐢癡獩索絝
     ```
     
@@ -229,7 +229,7 @@ Flags
 * **--silent**  
     Rather than printing response body, will only print response status code and message as well as the content-length from the response header:
     ```bash
-    foo:bar foo$ requestal get https://srcer.com/test/data -s 0 first --silent
+    foo:bar foo$ requestal get https://mydomain/myendpoint -s 0 first --silent
     Status: 200 OK; Response Size: 129
     ```
 
