@@ -1,6 +1,6 @@
 {
   "name": "requestal",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "A Node module for handling HTTP requests",
   "main": "index.js",
   "scripts": {
@@ -36,7 +36,8 @@
   },
   "homepage": "https://github.com/smguggen/requestal#readme",
   "dependencies": {
-    "@srcer/questal-proto": "^3.3.5",
+    "@srcer/config": "^1.1.1",
+    "@srcer/questal-proto": "^3.3.10",
     "ternal": "^1.0.3"
   },
   "devDependencies": {
