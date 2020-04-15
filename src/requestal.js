@@ -2,11 +2,15 @@ const RequestalRequest = require('./request');
 const RequestalGet = require('./get');
 const RequestalPost = require('./post');
 const RequestalDelete = require('./delete');
+const SrcerConfig = require('@srcer/config');
 
 class Requestal {
     
     constructor(base) {
-        this.base = base;
+        this.options = SrcerConfig.import({}, null, 'requestal');
+        if (base) {
+            this.options.base = base;
+        }
     }
     
     request(method, ...options) {
@@ -176,8 +180,8 @@ class Requestal {
                 result = Object.assign({}, option3, result);
             }
         }
-        if (this.base) {
-            result.base = this.base;
+        if (this.options) {
+            result = Object.assign({}, this.options, result);
         }
         return result;
     }
