@@ -4,7 +4,7 @@ const { ProtoRequest } = require('@srcer/questal-proto')
 const http = require('http');
 const https = require('https');
 const { echo } = require('ternal');
-
+const util = require('util');
 class RequestalRequest extends ProtoRequest {
     constructor(options) {
         super(null, options);
@@ -131,7 +131,7 @@ class RequestalRequest extends ProtoRequest {
     
     checkUrl(url) {
         console.log(this.url, url);
-        url = url || this.url;
+        url = url ? url : this.url;
         console.log('url', url);
         if (!this.method) {
             this.events.fire('error', 'Request method is empty');
@@ -170,8 +170,8 @@ class RequestalRequest extends ProtoRequest {
             $this.events.fire('responseHeaders', response.headers);
             response.setEncoding($this.response.encoding);
             
-            response.on('error', (...err) => {
-                $this.events.fire('error', 'Response Error:', ...err)
+            response.on('error', (err) => {
+                $this.events.fire('error', 'Response Error:', util.inspect(err))
             });
             response.on('data', chunk => {
                 $this.events.fire('data');
@@ -190,8 +190,8 @@ class RequestalRequest extends ProtoRequest {
                $this.events.fire('timeout'); 
             });
         }
-        this.request.on('error', (...err) => {
-            $this.events.fire('error', 'Request Error:', ...err || 'Unknown');
+        this.request.on('error', (err) => {
+            $this.events.fire('error', 'Request Error:', util.inspect(err || 'Unknown'));
         });
         this.request.on('abort', () => {
            $this.events.fire('abort'); 
@@ -292,8 +292,8 @@ class RequestalRequest extends ProtoRequest {
     
     _defaultEvents() {
         this.on('error', (...errs) => {
-           echo('red', ...errs);
-           process.exit(0);
+           echo('red', util.inspect(errs.join(',')));
+           process.exit(1);
         });
         this.events.first('ready', () => {
            this.state = 'ready'; 
