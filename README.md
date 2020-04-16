@@ -36,7 +36,13 @@ Options
 -------
 There are several ways to pass options into your `Requestal` instance, with each way having a slightly different effect:  
 1. **The Config File**  
-   `Requestal` will first look for a `requestal.config.js` or `requestal.config.json` file in your project's root. Options in the file will be passed into the `Requestal` constructor and serve as the default options for all requests made for the project, including requests made using `Requestal` static methods.  
+   `Requestal` will automatically look for a `requestal.config.js` or `requestal.config.json` file in your project's root. If the config file is named something else or is located somewhere else, specify the full path to the config file in the options parameter passed to the `Requestal` constructor like so:
+   ```javascript
+   const q = new Requestal({
+       config: '/full/path/to/config/file'
+   });
+   ```
+   Options in the file will be passed into the `Requestal` constructor and serve as the default options for all requests made for the project, including requests made using `Requestal` static methods. If no config file is found, the preset default options will be used. 
    
 2. **The Requestal Constructor**  
    Passing options straight into the `Requestal` constructor will override options in a config file and become the default options for all requests made with that `Requestal` instance.     
