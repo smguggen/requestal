@@ -6,11 +6,8 @@ const SrcerConfig = require('@srcer/config');
 
 class Requestal {
     
-    constructor(base) {
-        this.options = SrcerConfig.import({}, null, 'requestal');
-        if (base) {
-            this.options.base = base;
-        }
+    constructor(options) {
+        this.options = SrcerConfig.import({}, options, 'requestal');
     }
     
     request(method, ...options) {
