@@ -97,7 +97,7 @@ Events
 *Note*: In Event Callbacks, `this` always refers to the `Requestal` Request Method Instance.
    
 ***Available `Requestal` Events With Callback Parameters***  
-* *success*: Called when a request is completed successfully
+* **success**: Called when a request is completed successfully
 ```javascript
 q.on('success', callback(response));
 // Or pass directly as the 2nd or 3rd parameter to a static method
@@ -125,25 +125,25 @@ The data parameter passed to the `success` callback is a `RequestalResponse` obj
     }
 ]
 ``` 
-* *error*: Called when the request exits with errors. The error or error message is passed to the callback.
+* **error**: Called when the request exits with errors. The error or error message is passed to the callback.
 
-* *change*: Called whenever the state of the request has changed. The states are `ready`, `responseHeaders`, `data`, and `complete`. A string representing the new state is passed to the callback.
+* **change**: Called whenever the state of the request has changed. The states are `ready`, `responseHeaders`, `data`, and `complete`. A string representing the new state is passed to the callback.
 
-* *ready*: Called at the beginning of the request process when the state of the request is set to `ready`. No parameters are passed to the callback.  
+* **ready**: Called at the beginning of the request process when the state of the request is set to `ready`. No parameters are passed to the callback.  
 
-* *responseHeaders*: Called when the response headers are first received and the state of the request changes to `responseHeaders`. An object containing the response headers is passed to the callback.  
+* **responseHeaders**: Called when the response headers are first received and the state of the request changes to `responseHeaders`. An object containing the response headers is passed to the callback.  
 
-* *data*: Called whenever response data is available, starting when the request's state is first changed to receiving data. The current data chunk is passed to the callback.
+* **data**: Called whenever response data is available, starting when the request's state is first changed to receiving data. The current data chunk is passed to the callback.
 
-* *complete*: Called when a request's is finished and its state is set to `complete`, regardless of the outcome. The `RequestalResponse` and Node's `http(s).IncomingMessage` are both passed to the callback.  
+* **complete**: Called when a request's is finished and its state is set to `complete`, regardless of the outcome. The `RequestalResponse` and Node's `http(s).IncomingMessage` are both passed to the callback.  
 
-* *init*: Called before `ready`, when `Requestal` first becomes self-aware, so to speak. No parameters are passed to the callback;
+* **init**: Called before `ready`, when `Requestal` first becomes self-aware, so to speak. No parameters are passed to the callback;
 
-* *abort*: Called when a request is aborted. No parameters are passed to the callback.  
+* **abort**: Called when a request is aborted. No parameters are passed to the callback.  
 
-* *progress*: Called when there is information available regarding the progress of the request. The information is passed to the callback.
+* **progress**: Called when there is information available regarding the progress of the request. The information is passed to the callback.
 
-* *timeout*: Called when a request times out. No parameters are passed to the callback.  
+* **timeout**: Called when a request times out. No parameters are passed to the callback.  
 
 Headers
 -------
