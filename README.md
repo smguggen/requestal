@@ -15,7 +15,6 @@ npm install requestal
 
 Basic Usage:
 -------------
-
 You can make `get`, `post`, `put`, `patch`, and `delete` requests with `Requestal`. to make a quick one off request you can capitalize the first letter and call the static version of the method, or you can set more customized options by instantiating a new `Requestal` instance:
 :
 ```javascript
@@ -33,29 +32,30 @@ let getInstance = q.get(options);
 getInstance.send(url, data);
 ```
 
-Setting Options
+Options
 -------
 There are several ways to pass options into your `Requestal` instance, with each way having a slightly different effect:  
 1. **The Config File**  
    `Requestal` will first look for a `requestal.config.js` or `requestal.config.json` file in your project's root. Options in the file will be passed into the `Requestal` constructor and serve as the default options for all requests made for the project, including requests made using `Requestal` static methods.  
    
 2. **The Requestal Constructor**  
+   Passing options straight into the `Requestal` constructor will override options in a config file and become the default options for all requests made with that `Requestal` instance.     
    ```javascript
    const q = new Requestal(options);
-   ```      
-Passing the options straight into the `Requestal` constructor will override options in a config file and become the default options for all requests made with that `Requestal` instance.  
-
+   ``` 
 3. **The Method Constructor**
+   Calling a `Requestal` method constructor (i.e., a `Requestal` method named after an http request method) will return a new instance of that methods `Requestal` class.
    ```javascript
     let post = q.post(options);
    ```
-Calling a `Requestal` method constructor (i.e., a `Requestal` method named after an http request method) will return a new instance of that methods `Requestal` class. For example, calling `q.post` will return an instance of the `RequestalPost` class. Passing options into this method constructor will override options passed into the `Requestal` constructor and persist for all requests using that method instance.  
+   For example, calling `q.post` will return an instance of the `RequestalPost` class. Passing options into this method constructor will override options passed into the `Requestal` constructor and persist for all requests using that method instance.  
 
 4. **On Send**  
+   Passing options along when making the request will override all other options and only apply to the specific request being made.
    ```javascript
    post.send(options);
    ```
-Passing options along when making the request will override all other options and only apply to the specific request being made. Requests made using `Requestal` static methods will only use options from a config file or passed in this way.
+   Requests made using `Requestal` static methods will only use options from a config file or passed in this way.  
 
 Example of overriding `Requestal` options:
 ```javascript
