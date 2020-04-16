@@ -3,7 +3,6 @@ const RequestalResponse = require('../lib/response');
 const { echo } = require('ternal');
 const util = require('util');
 const path = require('path');
-const evental = require('evental').instance;
 
 class RequestalShell {
     constructor() {
@@ -236,12 +235,6 @@ class RequestalShell {
                 }
             }
         }
-        try {
-            let url = new URL(results.url);
-        } catch(e) {
-            echo('red', 'Request failed, Url is invalid');
-            this.exit(1);
-        }
         return results;
     }
     
@@ -260,6 +253,10 @@ class RequestalShell {
     }
     
     closingMessage(url) {
+        if (this.request.options && this.request.options.base) {
+            let U = new URL(url, this.request.options.base);
+            url = U.href;
+        }
         echo(this.color, this.message.replace('__', url))
     }
     

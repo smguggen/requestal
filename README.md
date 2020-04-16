@@ -15,7 +15,6 @@ npm install requestal
 
 Basic Usage:
 -------------
-
 You can make `get`, `post`, `put`, `patch`, and `delete` requests with `Requestal`. to make a quick one off request you can capitalize the first letter and call the static version of the method, or you can set more customized options by instantiating a new `Requestal` instance:
 :
 ```javascript
@@ -32,7 +31,39 @@ let getInstance = q.get(options);
 // do stuff
 getInstance.send(url, data);
 ```
-Pass parameters into the Requestal constructor to have them persist through every call made by that instance, then optionally override a parameter on any individual call:
+
+Options
+-------
+There are several ways to pass options into your `Requestal` instance, with each way having a slightly different effect:  
+1. **The Config File**  
+   `Requestal` will automatically look for a `requestal.config.js` or `requestal.config.json` file in your project's root. If the config file is named something else or is located somewhere else, specify the full path to the config file in the options parameter passed to the `Requestal` constructor like so:
+   ```javascript
+   const q = new Requestal({
+       config: '/full/path/to/config/file'
+   });
+   ```
+   Options in the file will be passed into the `Requestal` constructor and serve as the default options for all requests made for the project, including requests made using `Requestal` static methods. If no config file is found, the preset default options will be used. 
+   
+2. **The Requestal Constructor**  
+   Passing options straight into the `Requestal` constructor will override options in a config file and become the default options for all requests made with that `Requestal` instance.     
+   ```javascript
+   const q = new Requestal(options);
+   ``` 
+3. **The Method Constructor**
+   Calling a `Requestal` method constructor (i.e., a `Requestal` method named after an http request method) will return a new instance of that methods `Requestal` class.
+   ```javascript
+    let post = q.post(options);
+   ```
+   For example, calling `q.post` will return an instance of the `RequestalPost` class. Passing options into this method constructor will override options passed into the `Requestal` constructor and persist for all requests using that method instance.  
+
+4. **On Send**  
+   Passing options along when making the request will override all other options and only apply to the specific request being made.
+   ```javascript
+   post.send(options);
+   ```
+   Requests made using `Requestal` static methods will only use options from a config file or passed in this way.  
+
+Example of overriding `Requestal` options:
 ```javascript
 let post = q.post(
     {
@@ -52,26 +83,33 @@ post.send();
 post.send('/params', { id:17, last:'Nelson' });  
 ```
 
-Base Domains
--------------
-If you plan on making the lion's share of requests with your `Requestal` Instance to the same domain, you can pass a base url into the constructor when instantiating:
+Base
+----  
+Setting `options.base` is convenient if you plan on making the lion's share of requests to the same domain.
 ```javascript
-const q = new Requestal('https://mydomain.com');
+const q = new Requestal({ 
+    base: 'https://mydomain.com'
+});
 ```
-Then any requests with no base will use `q.base`, while passing a full url with a request will override the base:
+Then any requests with no base will use the base, while passing a full url with a request will override the base:
 ```javascript
 q.post('/my/path'); // Request will be sent to 'https://mydomain.com/my/path'
 
 q.post('https://yourdomain.com/my/path'); // Request will be sent to 'https://yourdomain.com/my/path'
 ```
 
-Callbacks
----------
+Events
+------ 
+*Note*: In Event Callbacks, `this` always refers to the `Requestal` Request Method Instance.
+   
+***Available `Requestal` Events With Callback Parameters***  
+* **success**: Called when a request is completed successfully
 ```javascript
-//static post request
+q.on('success', callback(response));
+// Or pass directly as the 2nd or 3rd parameter to a static method
 Requestal.Post('/path/to/dest', function(data) { console.log(data, data.json)});
 ```
-The data parameter passed to the 'on success' callback is a Requestal Response object containing the results of the request, including some handy methods for accessing the data.
+The data parameter passed to the `success` callback is a `RequestalResponse` object containing the results of the request, including some handy methods for accessing the data.
 
 #### data.json:
 ```json
@@ -92,11 +130,29 @@ The data parameter passed to the 'on success' callback is a Requestal Response o
         "last":"Davis"
     }
 ]
-```
+``` 
+* **error**: Called when the request exits with errors. The error or error message is passed to the callback.
+
+* **change**: Called whenever the state of the request has changed. The states are `ready`, `responseHeaders`, `data`, and `complete`. A string representing the new state is passed to the callback.
+
+* **ready**: Called at the beginning of the request process when the state of the request is set to `ready`. No parameters are passed to the callback.  
+
+* **responseHeaders**: Called when the response headers are first received and the state of the request changes to `responseHeaders`. An object containing the response headers is passed to the callback.  
+
+* **data**: Called whenever response data is available, starting when the request's state is first changed to receiving data. The current data chunk is passed to the callback.
+
+* **complete**: Called when a request's is finished and its state is set to `complete`, regardless of the outcome. The `RequestalResponse` and Node's `http(s).IncomingMessage` are both passed to the callback.  
+
+* **init**: Called before `ready`, when `Requestal` first becomes self-aware, so to speak. No parameters are passed to the callback;
+
+* **abort**: Called when a request is aborted. No parameters are passed to the callback.  
+
+* **progress**: Called when there is information available regarding the progress of the request. The information is passed to the callback.
+
+* **timeout**: Called when a request times out. No parameters are passed to the callback.  
 
 Headers
 -------
-
 ```javascript
 let post = q.post('/data')
 
@@ -161,7 +217,7 @@ Flags
    ```bash
     foo:bar foo$ requestal post https://mydomain/myendpoint 
     
-    Response from https://srcer.com/test/data: 
+    Response from https://mydomain/myendpoint: 
     ┌─────────┬────┬────────┬─────────┐
     │ (index) │ id │ first  │  last   │
     ├─────────┼────┼────────┼─────────┤
@@ -170,9 +226,9 @@ Flags
     │    2    │ 3  │ 'Bob'  │ 'Davis' │
     └─────────┴────┴────────┴─────────┘
     
-    foo:bar foo$ requestal get https://srcer.com/test/data -s first
+    foo:bar foo$ requestal get https://mydomain/myendpoint -s first
     
-    Subset parsing failed, printing full response from https://srcer.com/test/data:
+    Subset parsing failed, printing full response from https://mydomain/myendpoint:
     ┌─────────┬────┬────────┬─────────┐
     │ (index) │ id │ first  │  last   │
     ├─────────┼────┼────────┼─────────┤
@@ -181,16 +237,16 @@ Flags
     │    2    │ 3  │ 'Bob'  │ 'Davis' │
     └─────────┴────┴────────┴─────────┘
     
-    foo:bar foo$ requestal get https://srcer.com/test/data -s 0 first
+    foo:bar foo$ requestal get https://mydomain/myendpoint -s 0 first
     
-    Response from https://srcer.com/test/data: 
+    Response from https://mydomain/myendpoint: 
     Bill
    ```  
 
 * **-h | --headers**  
     Set headers for the request here in a `<key>=<value>` fashion:
     ```bash
-    foo:bar foo$ requestal get https://srcer.com/test/data -s 0 first -h contentType=json connection=keep-alive
+    foo:bar foo$ requestal get https://mydomain/myendpoint -s 0 first -h contentType=json connection=keep-alive
     ```  
     
 * **-on**  
@@ -202,18 +258,18 @@ Flags
     }
     ```
     ```bash
-    foo:bar foo$ requestal get https://srcer.com/test/data -s 0 first -on success=./myfile.js
+    foo:bar foo$ requestal get https://mydomain/myendpoint -s 0 first -on success=./myfile.js
     
-    Response from https://srcer.com/test/data: 
+    Response from https://mydomain/myendpoint: 
     Bill
     ``` 
     
 * **-e | --encoding**  
     Set the encoding of the response, default is `utf8`:
     ```bash
-    foo:bar foo$ requestal get https://srcer.com/test/data -s 0 first -e utf16
+    foo:bar foo$ requestal get https://mydomain/myendpoint -s 0 first -e utf16
     
-    Response from https://srcer.com/test/data: 
+    Response from https://mydomain/myendpoint: 
     筛渢浡獥㨢筛椢≤ㄺ∬楦獲≴∺楂汬Ⱒ氢獡≴∺潊敮≳ⱽ≻摩㨢ⰲ昢物瑳㨢䨢湡≥∬慬瑳㨢匢業桴索第椢≤㌺∬楦獲≴∺潂≢∬慬瑳㨢䐢癡獩索絝
     ```
     
@@ -229,7 +285,7 @@ Flags
 * **--silent**  
     Rather than printing response body, will only print response status code and message as well as the content-length from the response header:
     ```bash
-    foo:bar foo$ requestal get https://srcer.com/test/data -s 0 first --silent
+    foo:bar foo$ requestal get https://mydomain/myendpoint -s 0 first --silent
     Status: 200 OK; Response Size: 129
     ```
 
