@@ -130,9 +130,7 @@ class RequestalRequest extends ProtoRequest {
     }
     
     checkUrl(url) {
-        console.log(this.url, url);
         url = url ? url : this.url;
-        console.log('url', url);
         if (!this.method) {
             this.events.fire('error', 'Request method is empty');
         } else if (!url) {

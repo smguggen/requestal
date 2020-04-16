@@ -4,24 +4,20 @@ const RequestalPost = require('./post');
 const RequestalDelete = require('./delete');
 const SrcerConfig = require('@srcer/config');
 
-class Requestal extends SrcerConfig {
+class Requestal {
     
     constructor(options) {
-        if (options && typeof options === 'string') {
-            options = {
+        options = options && typeof options === 'string' ? {
                 base: options
+            } : (options || {});
+            let settings = 'requestal';
+            if (options.config) {
+                settings = {
+                    fullPath: options.config
+                }
+                delete options.config;
             }
-        }
-        let root;
-        if (options.root) {
-            root = options.root;
-            delete options.root;
-        }
-        let settings = root ? {
-            root: root,
-            file: 'requestal'
-        } : 'requestal';
-        super(options, settings);
+        this.options = SrcerConfig.import({}, options, settings);
     }
     
     request(method, ...options) {
