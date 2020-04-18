@@ -2,7 +2,6 @@ const Requestal = require('../index');
 const RequestalResponse = require('../lib/response');
 const { echo } = require('ternal');
 const util = require('util');
-const path = require('path');
 
 class RequestalShell {
     constructor() {

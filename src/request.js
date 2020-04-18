@@ -177,9 +177,9 @@ class RequestalRequest extends ProtoRequest {
             });
             
             response.on('end', () => {
-               if ($this.chunks) {
+               if ($this.response.isSuccess()) {
                    $this.events.fire('success', $this.response, response);
-               } 
+               }
                $this.events.fire('complete', $this.response, response);
             });
         });
