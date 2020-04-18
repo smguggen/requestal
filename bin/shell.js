@@ -138,7 +138,7 @@ class RequestalShell {
         
         let data = this.verbose ? response : response.json;
         if (!data) {
-            this.setError('yellow', 'No Response Data Received, Status: ' + response.code + ' ' + response.status, 0);
+            this.setError('yellow', 'No Response Data Received, Status: ' + response.status, 0);
         }
         if (Buffer.isBuffer(data)) {
             data = data.toString();
@@ -155,7 +155,7 @@ class RequestalShell {
             toPrint = data;
         }
         if (data && !toPrint) {
-            this.setError('red', 'Subset parsing failed, Status: ' + response.code + ' ' + response.status);
+            this.setError('red', 'Subset parsing failed, Status: ' + response.status);
         }
         if (raw || typeof toPrint === 'string') {
             this.raw = true;
@@ -171,12 +171,12 @@ class RequestalShell {
             printed = this.getSubset(subset, printed);
         }
         if (toPrint && !printed) {
-            if (response.status == 'OK') {
+            if (response.message == 'OK') {
                 this.color = 'yellow';
                 this.message = 'Subset parsing failed, printing full response from __:';
                 printed = toPrint;
             } else {
-                this.setError('red', 'Subset parsing failed, Status: ' + response.code + ' ' + response.status);
+                this.setError('red', 'Subset parsing failed, Status: ' + response.status);
             }
         }
         return printed;
@@ -363,7 +363,7 @@ class RequestalShell {
     
     silence(response) {
         this.color = response.isSuccess() ? 'green' : 'red';
-        this.message = 'Status: ' + response.code + ' ' + response.status;
+        this.message = 'Status: ' + response.status;
         let length = response.settings && 
             response.settings.headers && 
             response.settings.headers['content-length'] > -1 ? 
