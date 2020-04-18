@@ -294,8 +294,7 @@ class RequestalShell {
                     if (typeof e === 'string') {
                         let result;
                         try {
-                            let ev = path.join(process.cwd(), e);
-                            result = require(ev);
+                            result = require(e);
                         } catch(e) {
                             result = () => e;
                         } finally {

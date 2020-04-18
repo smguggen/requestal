@@ -144,11 +144,11 @@ module.exports = function() {
     cmd2.stderr.on('data', err => {
         throw new Error(err);
     })
-    
+    const file = path.resolve(__dirname, 'test-exec.js');
     const cmd3 = spawn('requestal', [
         'get', 
         'https://srcer.com/test/data',
-        '-on', 'success=./test/test-exec',
+        '-on', 'success=' + file,
         '-s', '0', 'names', '2', 'last',
         '-d', 'method=post', '-test'
     ]);
