@@ -180,7 +180,9 @@ class RequestalRequest extends ProtoRequest {
                if ($this.response.isSuccess()) {
                    $this.events.fire('success', $this.response, response);
                } else {
-                   echo('red', 'Response Not Successful, Code: ' + $this.response.status + ', Url: ' + $this.url + ' Settings: ' + util.inspect($this.settings));
+                    if (!$this.options.silent) {
+                        echo('red', 'Response Not Successful, Code: ' + $this.response.status + ', Url: ' + $this.url + ' Settings: ' + util.inspect($this.settings));
+                    }
                }
                $this.events.fire('complete', $this.response, response);
             });
