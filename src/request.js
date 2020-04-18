@@ -179,6 +179,8 @@ class RequestalRequest extends ProtoRequest {
             response.on('end', () => {
                if ($this.response.isSuccess()) {
                    $this.events.fire('success', $this.response, response);
+               } else {
+                   echo('red', 'Response Not Successful, Code: ' + $this.response.status + ', Url: ' + $this.url + ' Settings: ' + util.inspect($this.settings));
                }
                $this.events.fire('complete', $this.response, response);
             });
@@ -224,7 +226,7 @@ class RequestalRequest extends ProtoRequest {
         this.method = this.options.method || 'get';
         this.data.params = this.options.data || this.options.params;
         this.setSettings();
-        this._defaultEvents();
+        this._defaultEvents(this.options.silent);
         this.onReady(options);
     }
         
@@ -288,10 +290,12 @@ class RequestalRequest extends ProtoRequest {
         return this._chunks || '';
     }
     
-    _defaultEvents() {
+    _defaultEvents(silent) {
         this.on('error', (...errs) => {
-           echo('red', util.inspect(errs.join(',')));
-           process.exit(1);
+            echo('red', util.inspect(errs.join(',')));
+            if (!silent) {
+                process.exit(1);
+            }
         });
         this.events.first('ready', () => {
            this.state = 'ready'; 

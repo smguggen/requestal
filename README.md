@@ -131,7 +131,7 @@ The data parameter passed to the `success` callback is a `RequestalResponse` obj
     }
 ]
 ``` 
-* **error**: Called when the request exits with errors. The error or error message is passed to the callback.
+* **error**: Called when the request exits with errors. The error or error message is passed to the callback. You can instruct errors not to trigger an exit by setting `options.silent` to true in either the `Requestal` constructor or the Method Constructor
 
 * **change**: Called whenever the state of the request has changed. The states are `ready`, `responseHeaders`, `data`, and `complete`. A string representing the new state is passed to the callback.
 
