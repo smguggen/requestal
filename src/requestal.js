@@ -6,11 +6,12 @@ const SrcerConfig = require('@srcer/config');
 
 class Requestal {
     
-    constructor(options) {
+    constructor(options, fileName) {
+        fileName = fileName || 'requestal';
         options = options && typeof options === 'string' ? {
                 base: options
             } : (options || {});
-            let settings = 'requestal';
+            let settings = fileName;
             if (options.config) {
                 settings = {
                     fullPath: options.config
